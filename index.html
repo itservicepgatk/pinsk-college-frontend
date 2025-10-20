@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Личный кабинет заочника</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <div id="login-form-container">
+            <h1>Вход в личный кабинет</h1>
+            <form id="login-form">
+                <input type="text" id="login" placeholder="Логин" required>
+                <input type="password" id="password" placeholder="Пароль" required>
+                <button type="submit">Войти</button>
+            </form>
+            <p id="error-message" class="error"></p>
+        </div>
+
+        <div id="student-info-container" class="hidden">
+            <h1>Личные данные</h1>
+            <div id="student-info">
+            </div>
+            <button id="logout-button">Выйти</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
