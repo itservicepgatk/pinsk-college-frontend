@@ -1,4 +1,4 @@
-const API_URL = 'http://localhost:3000';
+const API_URL = 'https://pinsk-college-backend.onrender.com';
 
 const loginFormContainer = document.getElementById('login-form-container');
 const studentInfoContainer = document.getElementById('student-info-container');
