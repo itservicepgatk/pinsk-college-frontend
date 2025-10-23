@@ -56,3 +56,19 @@ button:hover {
     display: inline-block;
     width: 120px;
 }
+
+hr {
+    border: 0;
+    border-top: 1px solid #eee;
+    margin: 20px 0;
+}
+
+.no-debts {
+    color: green;
+    font-weight: bold;
+}
+
+.has-debts {
+    color: red;
+    font-weight: bold;
+}
