@@ -14,8 +14,10 @@
                 <input type="text" id="login" placeholder="Логин" required>
                 <input type="password" id="password" placeholder="Пароль" required>
                 <button type="submit">Войти</button>
+                <div id="loader" class="loader hidden"></div>
             </form>
             <p id="error-message" class="error"></p>
+            <p id="slow-connection-message" class="info hidden"></p>
         </div>
 
         <div id="student-info-container" class="hidden">
@@ -25,7 +27,6 @@
             <button id="logout-button">Выйти</button>
         </div>
     </div>
-
     <script src="script.js"></script>
 </body>
 </html>

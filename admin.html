@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Панель администратора</title>
+    <link rel="stylesheet" href="admin-style.css">
+</head>
+<body>
+    <div id="admin-login-container" class="container">
+        <h1>Вход для администратора</h1>
+        <form id="admin-login-form">
+            <input type="text" id="admin-login" placeholder="Логин" required>
+            <input type="password" id="admin-password" placeholder="Пароль" required>
+            <button type="submit">Войти</button>
+            <div id="admin-loader" class="loader hidden"></div>
+            <p id="admin-error-message" class="error"></p>
+        </form>
+    </div>
+
+    <div id="dashboard-container" class="container wide hidden">
+        <div class="dashboard-header">
+            <h1>Панель управления студентами</h1>
+            <button id="logout-button">Выйти</button>
+        </div>
+        
+        <button id="add-student-btn" class="btn-primary">Добавить студента</button>
+
+        <table id="students-table">
+            <thead>
+                <tr>
+                    <th>ФИО</th>
+                    <th>Группа</th>
+                    <th>Логин</th>
+                    <th>Действия</th>
+                </tr>
+            </thead>
+            <tbody id="students-table-body">
+            </tbody>
+        </table>
+    </div>
+
+    <div id="modal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <h2 id="modal-title">Добавить студента</h2>
+            <form id="student-form">
+                <input type="hidden" id="student-id">
+                
+                <label for="fullName">ФИО:</label>
+                <input type="text" id="fullName" required>
+                
+                <label for="login">Логин:</label>
+                <input type="text" id="login" required>
+                
+                <label for="password">Пароль (оставьте пустым, чтобы не менять):</label>
+                <input type="password" id="password">
+                
+                <label for="group_name">Группа:</label>
+                <input type="text" id="group_name" required>
+                
+                <label for="course">Курс:</label>
+                <input type="number" id="course" required>
+                
+                <label for="specialty">Специальность:</label>
+                <input type="text" id="specialty">
+                
+                <label for="enrollmentDate">Дата зачисления:</label>
+                <input type="text" id="enrollmentDate">
+
+                <label for="sessionSchedule">Расписание сессий:</label>
+                <textarea id="sessionSchedule"></textarea>
+
+                <label for="academicDebts">Академические задолженности:</label>
+                <textarea id="academicDebts"></textarea>
+
+                <div class="modal-buttons">
+                    <button type="submit" class="btn-primary">Сохранить</button>
+                    <button type="button" id="cancel-btn">Отмена</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <script src="admin-script.js"></script>
+</body>
+</html>

@@ -1,0 +1,122 @@
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    background-color: #f0f2f5;
+    color: #333;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 20px;
+    box-sizing: border-box;
+}
+.container {
+    background-color: white;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 400px;
+}
+.container.wide {
+    max-width: 900px;
+}
+h1, h2 {
+    text-align: center;
+}
+.hidden { display: none !important; }
+.error { color: red; text-align: center; margin-top: 10px; }
+.loader { border: 4px solid #f3f3f3; border-top: 4px solid #007bff; border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite; margin: 15px auto 0; }
+@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+input[type="text"], input[type="password"], input[type="number"], textarea {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+button {
+    width: 100%;
+    padding: 12px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.2s;
+}
+button:hover { background-color: #0056b3; }
+button:disabled { background-color: #a0c3e6; cursor: not-allowed; }
+.btn-primary { background-color: #28a745; }
+.btn-primary:hover { background-color: #218838; }
+.btn-secondary { background-color: #6c757d; }
+.btn-secondary:hover { background-color: #5a6268; }
+.btn-danger { background-color: #dc3545; }
+.btn-danger:hover { background-color: #c82333; }
+
+.dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+.dashboard-header h1 {
+    margin: 0;
+}
+.dashboard-header button {
+    width: auto;
+    padding: 10px 15px;
+}
+
+#students-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+#students-table th, #students-table td {
+    border: 1px solid #ddd;
+    padding: 12px;
+    text-align: left;
+}
+#students-table th {
+    background-color: #f8f9fa;
+    font-weight: bold;
+}
+#students-table tr:nth-child(even) { background-color: #f2f2f2; }
+.action-buttons button {
+    width: auto;
+    padding: 5px 10px;
+    margin-right: 5px;
+    font-size: 14px;
+}
+
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.modal-content {
+    background: white;
+    padding: 30px;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 500px;
+}
+.modal-buttons {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+}
