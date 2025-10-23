@@ -12,6 +12,7 @@ loginForm.addEventListener('submit', async (event) => {
     const login = document.getElementById('login').value;
     const password = document.getElementById('password').value;
     errorMessage.textContent = '';
+
     try {
         const response = await fetch(`${API_URL}/login`, {
             method: 'POST',
@@ -20,32 +21,39 @@ loginForm.addEventListener('submit', async (event) => {
             },
             body: JSON.stringify({ login, password })
         });
+
         if (!response.ok) {
             const errorData = await response.json();
             throw new Error(errorData.message || 'Произошла ошибка');
         }
+
         const studentData = await response.json();
-        displayStudentInfo(studentData);
+        displayStudentInfo(studentData); 
+
     } catch (error) {
         errorMessage.textContent = error.message;
     }
 });
 
-studentInfoDiv.innerHTML = `
-    <p><strong>ФИО:</strong> ${data.fullName}</p>
-    <p><strong>Курс:</strong> ${data.course}</p>
-    <p><strong>Группа:</strong> ${data.group}</p>
-    <p><strong>Специальность:</strong> ${data.specialty}</p>
-    <p><strong>Дата зачисления:</strong> ${data.enrollmentDate}</p>
-    <hr>
-    <p><strong>Расписание сессий:</strong> ${data.sessionSchedule || 'Нет данных'}</p>
-    <p><strong>Академические задолженности:</strong> 
-       <span class="${!data.academicDebts || data.academicDebts.toLowerCase() === 'нет' ? 'no-debts' : 'has-debts'}">
-         ${data.academicDebts || 'Отсутствуют'}
-       </span>
-    </p>
-`;
+function displayStudentInfo(data) {
+    loginFormContainer.classList.add('hidden');
+    studentInfoContainer.classList.remove('hidden');
 
+    studentInfoDiv.innerHTML = `
+        <p><strong>ФИО:</strong> ${data.fullName}</p>
+        <p><strong>Курс:</strong> ${data.course}</p>
+        <p><strong>Группа:</strong> ${data.group}</p>
+        <p><strong>Специальность:</strong> ${data.specialty}</p>
+        <p><strong>Дата зачисления:</strong> ${data.enrollmentDate}</p>
+        <hr>
+        <p><strong>Расписание сессий:</strong> ${data.sessionSchedule || 'Нет данных'}</p>
+        <p><strong>Академические задолженности:</strong> 
+           <span class="${!data.academicDebts || data.academicDebts.toLowerCase() === 'нет' ? 'no-debts' : 'has-debts'}">
+             ${data.academicDebts || 'Отсутствуют'}
+           </span>
+        </p>
+    `;
+}
 
 logoutButton.addEventListener('click', () => {
     studentInfoContainer.classList.add('hidden');
