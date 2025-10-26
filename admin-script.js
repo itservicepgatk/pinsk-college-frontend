@@ -59,19 +59,28 @@ function openModal(mode, studentId = null) {
 
     if (mode === 'add') {
         modalTitle.textContent = 'Добавить студента';
+        document.querySelector('label[for="password"]').textContent = 'Пароль:';
+
     } else if (mode === 'edit') {
         modalTitle.textContent = 'Редактировать студента';
+        document.querySelector('label[for="password"]').textContent = 'Новый пароль (оставьте пустым, чтобы не менять):';
+
         const student = students.find(s => s.id === studentId);
+        
         if (student) {
             document.getElementById('student-id').value = student.id;
             document.getElementById('fullName').value = student.full_name;
             document.getElementById('login').value = student.login;
             document.getElementById('group_name').value = student.group_name;
             document.getElementById('course').value = student.course;
+
             document.getElementById('specialty').value = student.specialty || '';
             document.getElementById('enrollmentDate').value = student.enrollment_date || '';
             document.getElementById('sessionSchedule').value = student.session_schedule || '';
             document.getElementById('academicDebts').value = student.academic_debts || '';
+        } else {
+            alert('Ошибка: не удалось найти данные студента для редактирования.');
+            return;
         }
     }
     modal.classList.remove('hidden');
