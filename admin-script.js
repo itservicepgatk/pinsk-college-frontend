@@ -65,7 +65,7 @@ function openModal(mode, studentId = null) {
         modalTitle.textContent = 'Редактировать студента';
         document.querySelector('label[for="password"]').textContent = 'Новый пароль (оставьте пустым, чтобы не менять):';
 
-        const student = students.find(s => s.id === studentId);
+        const student = students.find(s => s.id === Number(studentId));
         
         if (student) {
             document.getElementById('student-id').value = student.id;
