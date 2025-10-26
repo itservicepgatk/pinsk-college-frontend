@@ -15,10 +15,11 @@ const modal = document.getElementById('modal');
 const modalTitle = document.getElementById('modal-title');
 const studentForm = document.getElementById('student-form');
 const cancelBtn = document.getElementById('cancel-btn');
+const searchInput = document.getElementById('search-input');
 
-function renderStudents() {
+function renderStudents(studentsToRender) {
     studentsTableBody.innerHTML = '';
-    students.forEach(student => {
+    studentsToRender.forEach(student => {
         const row = document.createElement('tr');
         row.innerHTML = `
             <td>${student.full_name}</td>
@@ -40,9 +41,13 @@ async function fetchStudents() {
         });
         if (!response.ok) throw new Error('Не удалось загрузить студентов');
         students = await response.json();
-        renderStudents();
+        renderStudents(students);
     } catch (error) {
-        alert(error.message);
+        Swal.fire({
+            icon: 'error',
+            title: 'Ошибка!',
+            text: error.message,
+        });
     }
 }
 
@@ -52,7 +57,6 @@ function showView(view) {
     document.getElementById(view).classList.remove('hidden');
 }
 
-
 function openModal(mode, studentId = null) {
     studentForm.reset();
     document.getElementById('student-id').value = '';
@@ -60,26 +64,27 @@ function openModal(mode, studentId = null) {
     if (mode === 'add') {
         modalTitle.textContent = 'Добавить студента';
         document.querySelector('label[for="password"]').textContent = 'Пароль:';
-
     } else if (mode === 'edit') {
         modalTitle.textContent = 'Редактировать студента';
         document.querySelector('label[for="password"]').textContent = 'Новый пароль (оставьте пустым, чтобы не менять):';
-
-        const student = students.find(s => s.id === Number(studentId));
         
+        const student = students.find(s => Number(s.id) === Number(studentId));
         if (student) {
             document.getElementById('student-id').value = student.id;
             document.getElementById('fullName').value = student.full_name;
             document.getElementById('login').value = student.login;
             document.getElementById('group_name').value = student.group_name;
             document.getElementById('course').value = student.course;
-
             document.getElementById('specialty').value = student.specialty || '';
             document.getElementById('enrollmentDate').value = student.enrollment_date || '';
             document.getElementById('sessionSchedule').value = student.session_schedule || '';
             document.getElementById('academicDebts').value = student.academic_debts || '';
         } else {
-            alert('Ошибка: не удалось найти данные студента для редактирования.');
+            Swal.fire({
+                icon: 'error',
+                title: 'Ошибка!',
+                text: 'Не удалось найти данные студента для редактирования.',
+            });
             return;
         }
     }
@@ -95,20 +100,40 @@ window.editStudent = (id) => {
 };
 
 window.deleteStudent = async (id) => {
-    if (!confirm('Вы уверены, что хотите удалить этого студента?')) return;
+    const result = await Swal.fire({
+        title: 'Вы уверены?',
+        text: "Это действие нельзя будет отменить!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Да, удалить!',
+        cancelButtonText: 'Отмена'
+    });
 
-    try {
-        const response = await fetch(`${API_URL}/api/students/${id}`, {
-            method: 'DELETE',
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-        if (!response.ok) throw new Error('Ошибка при удалении');
-        fetchStudents();
-    } catch (error) {
-        alert(error.message);
+    if (result.isConfirmed) {
+        try {
+            const response = await fetch(`${API_URL}/api/students/${id}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (!response.ok) throw new Error('Ошибка при удалении');
+
+            Swal.fire(
+                'Удалено!',
+                'Данные студента были успешно удалены.',
+                'success'
+            );
+            fetchStudents();
+        } catch (error) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Ошибка!',
+                text: error.message,
+            });
+        }
     }
 };
-
 
 adminLoginForm.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -154,7 +179,7 @@ cancelBtn.addEventListener('click', closeModal);
 studentForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const id = document.getElementById('student-id').value;
-    
+
     const studentData = {
         fullName: document.getElementById('fullName').value,
         login: document.getElementById('login').value,
@@ -184,12 +209,34 @@ studentForm.addEventListener('submit', async (e) => {
             },
             body: JSON.stringify(studentData)
         });
+
         if (!response.ok) throw new Error('Ошибка при сохранении данных');
+
         closeModal();
         fetchStudents();
+
+        Swal.fire({
+            icon: 'success',
+            title: 'Сохранено!',
+            text: 'Данные студента успешно обновлены.',
+            showConfirmButton: false,
+            timer: 1500
+        });
     } catch (error) {
-        alert(error.message);
+        Swal.fire({
+            icon: 'error',
+            title: 'Ошибка!',
+            text: error.message,
+        });
     }
+});
+
+searchInput.addEventListener('input', () => {
+    const searchTerm = searchInput.value.toLowerCase();
+    const filteredStudents = students.filter(student => {
+        return student.full_name.toLowerCase().includes(searchTerm);
+    });
+    renderStudents(filteredStudents);
 });
 
 document.addEventListener('DOMContentLoaded', () => {
