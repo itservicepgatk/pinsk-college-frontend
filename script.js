@@ -9,9 +9,22 @@ const logoutButton = document.getElementById('logout-button');
 const loader = document.getElementById('loader');
 const slowConnectionMessage = document.getElementById('slow-connection-message');
 
+const materialsList = document.getElementById('materials-list');
+const pdfModal = document.getElementById('pdf-modal');
+const pdfTitle = document.getElementById('pdf-title');
+const pdfCloseBtn = document.getElementById('pdf-close-btn');
+const pdfCanvas = document.getElementById('pdf-canvas');
+const prevPageBtn = document.getElementById('prev-page');
+const nextPageBtn = document.getElementById('next-page');
+const pageNumSpan = document.getElementById('page-num');
+const pageCountSpan = document.getElementById('page-count');
+
+pdfjsLib.GlobalWorkerOptions.workerSrc = `//mozilla.github.io/pdf.js/build/pdf.worker.js`;
+let pdfDoc = null;
+let pageNum = 1;
+
 loginForm.addEventListener('submit', async (event) => {
     event.preventDefault();
-
     const login = document.getElementById('login').value;
     const password = document.getElementById('password').value;
 
@@ -33,15 +46,12 @@ loginForm.addEventListener('submit', async (event) => {
             },
             body: JSON.stringify({ login, password })
         });
-
         if (!response.ok) {
             const errorData = await response.json();
             throw new Error(errorData.message || 'Произошла ошибка');
         }
-
         const studentData = await response.json();
         displayStudentInfo(studentData);
-
     } catch (error) {
         errorMessage.textContent = error.message;
     } finally {
@@ -55,6 +65,7 @@ loginForm.addEventListener('submit', async (event) => {
 function displayStudentInfo(data) {
     loginFormContainer.classList.add('hidden');
     studentInfoContainer.classList.remove('hidden');
+
     studentInfoDiv.innerHTML = `
         <div class="info-row">
             <span class="info-label">ФИО:</span>
@@ -69,14 +80,13 @@ function displayStudentInfo(data) {
             <span class="info-value">${data.group}</span>
         </div>
         <div class="info-row">
+            <span class="info-label">Шифр:</span>
+            <span class="info-value">${data.studentCode || 'Нет данных'}</span>
+        </div>
+        <div class="info-row">
             <span class="info-label">Специальность:</span>
             <span class="info-value">${data.specialty}</span>
         </div>
-        <div class="info-row">
-            <span class="info-label">Дата зачисления:</span>
-            <span class="info-value">${data.enrollmentDate}</span>
-        </div>
-        <hr>
         <div class="info-row">
             <span class="info-label">Расписание сессий:</span>
             <span class="info-value">${data.sessionSchedule || 'Нет данных'}</span>
@@ -88,6 +98,23 @@ function displayStudentInfo(data) {
             </span>
         </div>
     `;
+
+    materialsList.innerHTML = '';
+    if (data.materials && data.materials.length > 0) {
+        data.materials.forEach(material => {
+            const link = document.createElement('a');
+            link.textContent = material.name;
+            link.href = '#';
+            link.dataset.path = material.path;
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                openPdfViewer(material.path, material.name);
+            });
+            materialsList.appendChild(link);
+        });
+    } else {
+        materialsList.innerHTML = '<p>Для вашей группы учебные материалы еще не загружены.</p>';
+    }
 }
 
 logoutButton.addEventListener('click', () => {
@@ -95,3 +122,58 @@ logoutButton.addEventListener('click', () => {
     loginFormContainer.classList.remove('hidden');
     loginForm.reset();
 });
+
+function renderPage(num) {
+    pdfDoc.getPage(num).then(function(page) {
+        const viewport = page.getViewport({ scale: 1.5 });
+        pdfCanvas.height = viewport.height;
+        pdfCanvas.width = viewport.width;
+
+        const renderContext = {
+            canvasContext: pdfCanvas.getContext('2d'),
+            viewport: viewport
+        };
+        page.render(renderContext);
+    });
+    pageNumSpan.textContent = num;
+}
+
+function onPrevPage() {
+    if (pageNum <= 1) return;
+    pageNum--;
+    renderPage(pageNum);
+}
+
+function onNextPage() {
+    if (pageNum >= pdfDoc.numPages) return;
+    pageNum++;
+    renderPage(pageNum);
+}
+
+prevPageBtn.addEventListener('click', onPrevPage);
+nextPageBtn.addEventListener('click', onNextPage);
+pdfCloseBtn.addEventListener('click', () => pdfModal.classList.add('hidden'));
+
+async function openPdfViewer(path, name) {
+    pdfTitle.textContent = name;
+    pdfModal.classList.remove('hidden');
+    
+    const url = `${API_URL}/api/material?path=${encodeURIComponent(path)}`;
+
+    try {
+        const loadingTask = pdfjsLib.getDocument(url);
+        const pdf = await loadingTask.promise;
+        pdfDoc = pdf;
+        pageCountSpan.textContent = pdfDoc.numPages;
+        pageNum = 1;
+        renderPage(pageNum);
+    } catch (error) {
+        console.error('Ошибка загрузки PDF:', error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Ошибка',
+            text: 'Не удалось загрузить методический материал.',
+        });
+        pdfModal.classList.add('hidden');
+    }
+}

@@ -116,3 +116,27 @@ hr {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
 }
+
+#materials-list a {
+    display: block;
+    padding: 10px;
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    margin-bottom: 5px;
+    text-decoration: none;
+    color: #007bff;
+    border-radius: 4px;
+    cursor: pointer;
+}
+#materials-list a:hover {
+    background-color: #e9ecef;
+}
+
+.modal-content.wide { max-width: 90vw; width: 900px; }
+.pdf-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+#pdf-close-btn { width: auto; font-size: 24px; padding: 0 10px; background: none; border: none; color: #555; }
+#pdf-viewer-container { border: 1px solid #ccc; height: 70vh; overflow-y: auto; text-align: center; }
+#pdf-canvas { max-width: 100%; }
+.pdf-controls { text-align: center; margin-top: 10px; }
+.pdf-controls button, .pdf-controls span { vertical-align: middle; }
+.pdf-controls button { width: auto; padding: 8px 12px; }

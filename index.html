@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Личный кабинет заочника</title>
     <link rel="stylesheet" href="style.css">
+    <script src="https://mozilla.github.io/pdf.js/build/pdf.js"></script>
+    <script src="https://mozilla.github.io/pdf.js/web/pdf_viewer.js"></script>
 </head>
 <body>
     <div class="container">
@@ -24,9 +26,33 @@
             <h1>Личные данные</h1>
             <div id="student-info">
             </div>
+
+            <hr>
+            <h2>Учебные материалы</h2>
+            <div id="materials-list">
+            </div>
+            
+            <div id="pdf-modal" class="modal-overlay hidden">
+                <div class="modal-content wide">
+                    <div class="pdf-header">
+                        <h3 id="pdf-title"></h3>
+                        <button id="pdf-close-btn">&times;</button>
+                    </div>
+                    <div id="pdf-viewer-container">
+                        <canvas id="pdf-canvas"></canvas>
+                    </div>
+                    <div class="pdf-controls">
+                        <button id="prev-page">Предыдущая</button>
+                        <span>Страница: <span id="page-num"></span> / <span id="page-count"></span></span>
+                        <button id="next-page">Следующая</button>
+                    </div>
+                </div>
+            </div>
+
             <button id="logout-button">Выйти</button>
         </div>
     </div>
+
     <script src="script.js"></script>
 </body>
 </html>

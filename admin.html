@@ -30,17 +30,18 @@
         <input type="text" id="search-input" placeholder="Поиск по ФИО...">
 
         <table id="students-table">
-            <thead>
+            <thead id="table-head">
                 <tr>
-                    <th>ФИО</th>
-                    <th>Группа</th>
-                    <th>Логин</th>
+                    <th data-sort-by="full_name">ФИО</th>
+                    <th data-sort-by="group_name">Группа</th>
+                    <th data-sort-by="login">Логин</th>
                     <th>Действия</th>
                 </tr>
             </thead>
             <tbody id="students-table-body">
             </tbody>
         </table>
+        <div id="pagination-container"></div>
     </div>
 
     <div id="modal" class="modal-overlay hidden">
@@ -83,7 +84,6 @@
             </form>
         </div>
     </div>
-
 
     <script src="admin-script.js"></script>
 </body>
