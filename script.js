@@ -101,17 +101,10 @@ function displayStudentInfo(data) {
 
     materialsList.innerHTML = '';
     if (data.materials && data.materials.length > 0) {
-        data.materials.forEach(material => {
-            const link = document.createElement('a');
-            link.textContent = material.name;
-            link.href = '#';
-            link.dataset.path = material.path;
-            link.addEventListener('click', (e) => {
-                e.preventDefault();
-                openPdfViewer(material.path, material.name);
-            });
-            materialsList.appendChild(link);
-        });
+        const listHtml = data.materials.map(material => 
+            `<a href="#" data-path="${material.path}" data-name="${material.name}">${material.name}</a>`
+        ).join('');
+        materialsList.innerHTML = listHtml;
     } else {
         materialsList.innerHTML = '<p>Для вашей группы учебные материалы еще не загружены.</p>';
     }
@@ -123,12 +116,22 @@ logoutButton.addEventListener('click', () => {
     loginForm.reset();
 });
 
+materialsList.addEventListener('click', (e) => {
+    if (e.target.tagName === 'A') {
+        e.preventDefault();
+        const path = e.target.dataset.path;
+        const name = e.target.dataset.name;
+        if (path && name) {
+            openPdfViewer(path, name);
+        }
+    }
+});
+
 function renderPage(num) {
     pdfDoc.getPage(num).then(function(page) {
         const viewport = page.getViewport({ scale: 1.5 });
         pdfCanvas.height = viewport.height;
         pdfCanvas.width = viewport.width;
-
         const renderContext = {
             canvasContext: pdfCanvas.getContext('2d'),
             viewport: viewport
