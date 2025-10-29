@@ -44,8 +44,9 @@ loginForm.addEventListener('submit', async (event) => {
             const errorData = await response.json();
             throw new Error(errorData.message || 'Произошла ошибка');
         }
-        const studentData = await response.json();
-        displayStudentInfo(studentData);
+        const data = await response.json();
+        localStorage.setItem('studentToken', data.token);
+        displayStudentInfo(data.studentData);
     } catch (error) {
         errorMessage.textContent = error.message;
     } finally {
@@ -110,6 +111,7 @@ function displayStudentInfo(data) {
 }
 
 logoutButton.addEventListener('click', () => {
+    localStorage.removeItem('studentToken');
     studentInfoContainer.classList.add('hidden');
     loginFormContainer.classList.remove('hidden');
     loginForm.reset();
@@ -150,11 +152,21 @@ pdfCloseBtn.addEventListener('click', () => {
 async function openPdfViewer(path, name) {
     pdfTitle.textContent = name;
     pdfModal.style.display = 'flex';
-    
-    const url = `${API_URL}/api/material?path=${encodeURIComponent(path)}`;
-
+    const token = localStorage.getItem('studentToken');
+    if (!token) {
+        Swal.fire('Ошибка', 'Ваша сессия истекла. Пожалуйста, войдите заново.', 'error');
+        return;
+    }
     try {
-        const loadingTask = pdfjsLib.getDocument(url);
+        const url = `${API_URL}/api/material?path=${encodeURIComponent(path)}`;
+        const response = await fetch(url, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!response.ok) {
+            throw new Error('Не удалось загрузить файл. Возможно, у вас нет доступа.');
+        }
+        const pdfData = await response.arrayBuffer();
+        const loadingTask = pdfjsLib.getDocument(pdfData);
         const pdf = await loadingTask.promise;
         pdfDoc = pdf;
         pageCountSpan.textContent = pdfDoc.numPages;
@@ -162,11 +174,7 @@ async function openPdfViewer(path, name) {
         renderPage(pageNum);
     } catch (error) {
         console.error('Ошибка загрузки PDF:', error);
-        Swal.fire({
-            icon: 'error',
-            title: 'Ошибка',
-            text: 'Не удалось загрузить методический материал.',
-        });
+        Swal.fire('Ошибка', error.message, 'error');
         pdfModal.style.display = 'none';
     }
 }

@@ -92,6 +92,12 @@ function showView(view) {
     adminLoginContainer.classList.add('hidden');
     dashboardContainer.classList.add('hidden');
     document.getElementById(view).classList.remove('hidden');
+
+    if (view === 'admin-login-container') {
+        document.body.classList.add('login-view');
+    } else {
+        document.body.classList.remove('login-view');
+    }
 }
 
 function validateForm() {

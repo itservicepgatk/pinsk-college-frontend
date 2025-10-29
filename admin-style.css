@@ -9,6 +9,11 @@ body {
     margin: 20px;
     box-sizing: border-box;
 }
+
+body.login-view {
+    align-items: center;
+}
+
 .container {
     background-color: white;
     padding: 30px;
