@@ -48,20 +48,15 @@ async function fetchStudents() {
             sortDir: currentSort.direction,
             search: currentSearch
         });
-        
         const response = await fetch(`${API_URL}/api/students?${params.toString()}`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
-
         if (!response.ok) throw new Error('Не удалось загрузить студентов');
-        
         const data = await response.json();
         students = data.students || [];
-        
         renderStudents(students);
         renderPagination(data.totalPages, data.currentPage);
         updateSortIndicators();
-
     } catch (error) {
         Swal.fire({ icon: 'error', title: 'Ошибка!', text: error.message });
     }
@@ -79,23 +74,19 @@ function updateSortIndicators() {
 function renderPagination(totalPages, pageToRender) {
     const paginationContainer = document.getElementById('pagination-container');
     paginationContainer.innerHTML = '';
-
     for (let i = 1; i <= totalPages; i++) {
         const button = document.createElement('button');
         button.textContent = i;
         if (i === pageToRender) {
             button.classList.add('active');
         }
-        
         button.addEventListener('click', () => {
             currentPage = i;
             fetchStudents();
         });
-        
         paginationContainer.appendChild(button);
     }
 }
-
 
 function showView(view) {
     adminLoginContainer.classList.add('hidden');

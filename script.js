@@ -8,7 +8,6 @@ const studentInfoDiv = document.getElementById('student-info');
 const logoutButton = document.getElementById('logout-button');
 const loader = document.getElementById('loader');
 const slowConnectionMessage = document.getElementById('slow-connection-message');
-
 const materialsList = document.getElementById('materials-list');
 const pdfModal = document.getElementById('pdf-modal');
 const pdfTitle = document.getElementById('pdf-title');
@@ -27,23 +26,18 @@ loginForm.addEventListener('submit', async (event) => {
     event.preventDefault();
     const login = document.getElementById('login').value;
     const password = document.getElementById('password').value;
-
     errorMessage.textContent = '';
     slowConnectionMessage.classList.add('hidden');
     loader.classList.remove('hidden');
     loginForm.querySelector('button').disabled = true;
-
     const slowConnectionTimer = setTimeout(() => {
         slowConnectionMessage.textContent = 'Плохое соединение с интернетом, подождите пожалуйста...';
         slowConnectionMessage.classList.remove('hidden');
     }, 3000);
-
     try {
         const response = await fetch(`${API_URL}/login`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ login, password })
         });
         if (!response.ok) {
@@ -65,7 +59,6 @@ loginForm.addEventListener('submit', async (event) => {
 function displayStudentInfo(data) {
     loginFormContainer.classList.add('hidden');
     studentInfoContainer.classList.remove('hidden');
-
     studentInfoDiv.innerHTML = `
         <div class="info-row">
             <span class="info-label">ФИО:</span>
@@ -98,13 +91,19 @@ function displayStudentInfo(data) {
             </span>
         </div>
     `;
-
     materialsList.innerHTML = '';
     if (data.materials && data.materials.length > 0) {
-        const listHtml = data.materials.map(material => 
-            `<a href="#" data-path="${material.path}" data-name="${material.name}">${material.name}</a>`
-        ).join('');
-        materialsList.innerHTML = listHtml;
+        data.materials.forEach(material => {
+            const link = document.createElement('a');
+            link.textContent = material.name;
+            link.href = '#';
+            link.dataset.path = material.path;
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                openPdfViewer(material.path, material.name);
+            });
+            materialsList.appendChild(link);
+        });
     } else {
         materialsList.innerHTML = '<p>Для вашей группы учебные материалы еще не загружены.</p>';
     }
@@ -116,19 +115,8 @@ logoutButton.addEventListener('click', () => {
     loginForm.reset();
 });
 
-materialsList.addEventListener('click', (e) => {
-    if (e.target.tagName === 'A') {
-        e.preventDefault();
-        const path = e.target.dataset.path;
-        const name = e.target.dataset.name;
-        if (path && name) {
-            openPdfViewer(path, name);
-        }
-    }
-});
-
 function renderPage(num) {
-    pdfDoc.getPage(num).then(function(page) {
+    pdfDoc.getPage(num).then(function (page) {
         const viewport = page.getViewport({ scale: 1.5 });
         pdfCanvas.height = viewport.height;
         pdfCanvas.width = viewport.width;
@@ -155,11 +143,13 @@ function onNextPage() {
 
 prevPageBtn.addEventListener('click', onPrevPage);
 nextPageBtn.addEventListener('click', onNextPage);
-pdfCloseBtn.addEventListener('click', () => pdfModal.classList.add('hidden'));
+pdfCloseBtn.addEventListener('click', () => {
+    pdfModal.style.display = 'none';
+});
 
 async function openPdfViewer(path, name) {
     pdfTitle.textContent = name;
-    pdfModal.classList.remove('hidden');
+    pdfModal.style.display = 'flex';
     
     const url = `${API_URL}/api/material?path=${encodeURIComponent(path)}`;
 
@@ -177,6 +167,6 @@ async function openPdfViewer(path, name) {
             title: 'Ошибка',
             text: 'Не удалось загрузить методический материал.',
         });
-        pdfModal.classList.add('hidden');
+        pdfModal.style.display = 'none';
     }
 }
