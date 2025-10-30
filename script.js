@@ -1,42 +1,28 @@
 const API_URL = 'https://pinsk-college-backend.onrender.com';
 
-let loginFormContainer, studentInfoContainer, loginForm, errorMessage,
-    studentInfoDiv, logoutButton, loader, slowConnectionMessage,
-    materialsList, pdfModal, pdfTitle, pdfCloseBtn, pdfCanvas,
-    prevPageBtn, nextPageBtn, pageNumSpan, pageCountSpan;
+const loginFormContainer = document.getElementById('login-form-container');
+const studentInfoContainer = document.getElementById('student-info-container');
+const loginForm = document.getElementById('login-form');
+const errorMessage = document.getElementById('error-message');
+const studentInfoDiv = document.getElementById('student-info');
+const logoutButton = document.getElementById('logout-button');
+const loader = document.getElementById('loader');
+const slowConnectionMessage = document.getElementById('slow-connection-message');
+const materialsList = document.getElementById('materials-list');
+const pdfModal = document.getElementById('pdf-modal');
+const pdfTitle = document.getElementById('pdf-title');
+const pdfCloseBtn = document.getElementById('pdf-close-btn');
+const pdfCanvas = document.getElementById('pdf-canvas');
+const prevPageBtn = document.getElementById('prev-page');
+const nextPageBtn = document.getElementById('next-page');
+const pageNumSpan = document.getElementById('page-num');
+const pageCountSpan = document.getElementById('page-count');
 
+pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js`;
 let pdfDoc = null;
 let pageNum = 1;
 
-function initializeElements() {
-    loginFormContainer = document.getElementById('login-form-container');
-    studentInfoContainer = document.getElementById('student-info-container');
-    loginForm = document.getElementById('login-form');
-    errorMessage = document.getElementById('error-message');
-    studentInfoDiv = document.getElementById('student-info');
-    logoutButton = document.getElementById('logout-button');
-    loader = document.getElementById('loader');
-    slowConnectionMessage = document.getElementById('slow-connection-message');
-    materialsList = document.getElementById('materials-list');
-    pdfModal = document.getElementById('pdf-modal');
-    pdfTitle = document.getElementById('pdf-title');
-    pdfCloseBtn = document.getElementById('pdf-close-btn');
-    pdfCanvas = document.getElementById('pdf-canvas');
-    prevPageBtn = document.getElementById('prev-page');
-    nextPageBtn = document.getElementById('next-page');
-    pageNumSpan = document.getElementById('page-num');
-    pageCountSpan = document.getElementById('page-count');
-}
-
-function attachEventListeners() {
-    loginForm.addEventListener('submit', handleLogin);
-    logoutButton.addEventListener('click', handleLogout);
-    prevPageBtn.addEventListener('click', onPrevPage);
-    nextPageBtn.addEventListener('click', onNextPage);
-    pdfCloseBtn.addEventListener('click', handlePdfClose);
-}
-
-async function handleLogin(event) {
+loginForm.addEventListener('submit', async (event) => {
     event.preventDefault();
     const login = document.getElementById('login').value;
     const password = document.getElementById('password').value;
@@ -69,18 +55,7 @@ async function handleLogin(event) {
         slowConnectionMessage.classList.add('hidden');
         loginForm.querySelector('button').disabled = false;
     }
-}
-
-function handleLogout() {
-    localStorage.removeItem('studentToken');
-    studentInfoContainer.classList.add('hidden');
-    loginFormContainer.classList.remove('hidden');
-    loginForm.reset();
-}
-
-function handlePdfClose() {
-    pdfModal.style.display = 'none';
-}
+});
 
 function displayStudentInfo(data) {
     loginFormContainer.classList.add('hidden');
@@ -135,7 +110,12 @@ function displayStudentInfo(data) {
     }
 }
 
-pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js`;
+logoutButton.addEventListener('click', () => {
+    localStorage.removeItem('studentToken');
+    studentInfoContainer.classList.add('hidden');
+    loginFormContainer.classList.remove('hidden');
+    loginForm.reset();
+});
 
 function renderPage(num) {
     pdfDoc.getPage(num).then(function (page) {
@@ -163,6 +143,12 @@ function onNextPage() {
     renderPage(pageNum);
 }
 
+prevPageBtn.addEventListener('click', onPrevPage);
+nextPageBtn.addEventListener('click', onNextPage);
+pdfCloseBtn.addEventListener('click', () => {
+    pdfModal.style.display = 'none';
+});
+
 async function openPdfViewer(path, name) {
     pdfTitle.textContent = name;
     pdfModal.style.display = 'flex';
@@ -188,20 +174,23 @@ async function openPdfViewer(path, name) {
         renderPage(pageNum);
     } catch (error) {
         console.error('Ошибка загрузки PDF:', error);
-        Swal.fire('Ошибка', error.message, 'error');
+        Swal.fire({
+            icon: 'error',
+            title: 'Ошибка',
+            text: 'Не удалось загрузить методический материал.',
+        });
         pdfModal.style.display = 'none';
     }
 }
 
 document.addEventListener('contextmenu', (event) => {
-    if (studentInfoContainer && studentInfoContainer.classList.contains('hidden')) {
-        return;
+    if (!studentInfoContainer.classList.contains('hidden')) {
+        event.preventDefault();
     }
-    event.preventDefault();
 });
 
 window.addEventListener('keydown', function(event) {
-    if (studentInfoContainer && studentInfoContainer.classList.contains('hidden')) {
+    if (studentInfoContainer.classList.contains('hidden')) {
         return;
     }
     if (event.ctrlKey || event.metaKey) {
@@ -211,16 +200,13 @@ window.addEventListener('keydown', function(event) {
         }
         if (key === 's') {
             event.preventDefault();
-            Swal.fire({
-                icon: 'warning',
-                title: 'Действие заблокировано',
-                text: 'Сохранение страницы отключено в целях безопасности.',
-                timer: 2000,
-                showConfirmButton: false,
-            });
+            const blocker = document.getElementById('save-blocker');
+            if (blocker) {
+                blocker.style.display = 'flex';
+                setTimeout(() => {
+                    blocker.style.display = 'none';
+                }, 500);
+            }
         }
     }
 });
-
-initializeElements();
-attachEventListeners();
