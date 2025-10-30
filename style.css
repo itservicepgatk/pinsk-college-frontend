@@ -70,3 +70,13 @@ hr { border: 0; border-top: 1px solid #eee; margin: 20px 0; }
     font-family: sans-serif;
     font-size: 24px;
 }
+
+.logo-container {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.logo-container img {
+    max-width: 150px;
+    height: auto;
+}
