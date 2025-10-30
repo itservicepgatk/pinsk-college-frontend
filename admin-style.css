@@ -3,15 +3,16 @@ body {
     background-color: #f0f2f5;
     color: #333;
     display: flex;
-    justify-content: center;
-    align-items: flex-start;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
     min-height: 100vh;
     margin: 20px;
     box-sizing: border-box;
 }
 
 body.login-view {
-    align-items: center;
+    justify-content: center;
 }
 
 .container {
@@ -64,6 +65,11 @@ input.invalid, textarea.invalid { border-color: #dc3545; box-shadow: 0 0 0 0.2re
 .logo-container {
     text-align: center;
     margin-bottom: 20px;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    pointer-events: none;
 }
 
 .logo-container img {
