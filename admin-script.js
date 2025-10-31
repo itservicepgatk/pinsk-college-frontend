@@ -3,8 +3,11 @@ let students = [];
 let token = localStorage.getItem('adminToken');
 let currentPage = 1;
 let currentSort = { key: 'full_name', direction: 'asc' };
-let currentSearch = '';
+let currentSearchName = '';
+let currentGroupName = null;
 let searchTimer;
+let inactivityTimer;
+const INACTIVITY_TIMEOUT = 5 * 60 * 1000;
 
 const adminLoginContainer = document.getElementById('admin-login-container');
 const dashboardContainer = document.getElementById('dashboard-container');
@@ -20,6 +23,28 @@ const studentForm = document.getElementById('student-form');
 const cancelBtn = document.getElementById('cancel-btn');
 const searchInput = document.getElementById('search-input');
 const tableHead = document.getElementById('table-head');
+const dashboardTitle = document.getElementById('dashboard-title');
+const groupsView = document.getElementById('groups-view');
+const studentsView = document.getElementById('students-view');
+const groupsContainer = document.getElementById('groups-container');
+const backToGroupsBtn = document.getElementById('back-to-groups-btn');
+const allStudentsBtn = document.getElementById('all-students-btn');
+const totalStudentsStat = document.getElementById('total-students-stat');
+const debtorsCountStat = document.getElementById('debtors-count-stat');
+const detailsBtn = document.getElementById('details-btn');
+const detailsModal = document.getElementById('details-modal');
+const detailsModalCloseBtn = document.getElementById('details-modal-close-btn');
+const groupsStatsTableBody = document.getElementById('groups-stats-table-body');
+const groupEditorBtn = document.getElementById('group-editor-btn');
+const groupEditorModal = document.getElementById('group-editor-modal');
+const groupEditorCloseBtn = document.getElementById('group-editor-close-btn');
+const groupEditorCancelBtn = document.getElementById('group-editor-cancel-btn');
+const groupEditorForm = document.getElementById('group-editor-form');
+const groupSelect = document.getElementById('group-select');
+const incrementCourseBtn = document.getElementById('increment-course-btn');
+const decrementCourseBtn = document.getElementById('decrement-course-btn');
+const copyScheduleBtn = document.getElementById('copy-schedule-btn');
+const newGroupNameInput = document.getElementById('new-group-name');
 
 function renderStudents(studentsToRender) {
     const studentsArray = studentsToRender || [];
@@ -46,8 +71,13 @@ async function fetchStudents() {
             limit: 10,
             sortBy: currentSort.key,
             sortDir: currentSort.direction,
-            search: currentSearch
         });
+        if (currentGroupName) {
+            params.append('searchGroup', currentGroupName);
+        }
+        if (currentSearchName) {
+            params.append('searchName', currentSearchName);
+        }
         const response = await fetch(`${API_URL}/api/students?${params.toString()}`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
@@ -92,7 +122,6 @@ function showView(view) {
     adminLoginContainer.classList.add('hidden');
     dashboardContainer.classList.add('hidden');
     document.getElementById(view).classList.remove('hidden');
-
     if (view === 'admin-login-container') {
         document.body.classList.add('login-view');
     } else {
@@ -133,11 +162,7 @@ function validateForm() {
         errorMessage = 'Пароль должен содержать не менее 6 символов.';
     }
     if (!isValid) {
-        Swal.fire({
-            icon: 'error',
-            title: 'Ошибка валидации',
-            text: errorMessage,
-        });
+        Swal.fire({ icon: 'error', title: 'Ошибка валидации', text: errorMessage });
     }
     return isValid;
 }
@@ -163,11 +188,7 @@ function openModal(mode, studentId = null) {
             document.getElementById('sessionSchedule').value = student.session_schedule || '';
             document.getElementById('academicDebts').value = student.academic_debts || '';
         } else {
-            Swal.fire({
-                icon: 'error',
-                title: 'Ошибка!',
-                text: 'Не удалось найти данные студента для редактирования.',
-            });
+            Swal.fire({ icon: 'error', title: 'Ошибка!', text: 'Не удалось найти данные студента для редактирования.' });
             return;
         }
     }
@@ -184,25 +205,17 @@ window.editStudent = (id) => {
 
 window.deleteStudent = async (id) => {
     const result = await Swal.fire({
-        title: 'Вы уверены?',
-        text: "Это действие нельзя будет отменить!",
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#3085d6',
-        cancelButtonColor: '#d33',
-        confirmButtonText: 'Да, удалить!',
-        cancelButtonText: 'Отмена'
+        title: 'Вы уверены?', text: "Это действие нельзя будет отменить!", icon: 'warning',
+        showCancelButton: true, confirmButtonColor: '#3085d6', cancelButtonColor: '#d33',
+        confirmButtonText: 'Да, удалить!', cancelButtonText: 'Отмена'
     });
     if (result.isConfirmed) {
         try {
-            const response = await fetch(`${API_URL}/api/students/${id}`, {
-                method: 'DELETE',
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
+            const response = await fetch(`${API_URL}/api/students/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
             if (!response.ok) throw new Error('Ошибка при удалении');
             Swal.fire('Удалено!', 'Данные студента были успешно удалены.', 'success');
             if (students.length === 1 && currentPage > 1) {
-                currentPage = currentPage - 1;
+                currentPage--;
             }
             fetchStudents();
         } catch (error) {
@@ -218,11 +231,7 @@ adminLoginForm.addEventListener('submit', async (e) => {
     const login = document.getElementById('admin-login').value;
     const password = document.getElementById('admin-password').value;
     try {
-        const response = await fetch(`${API_URL}/admin/login`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ login, password })
-        });
+        const response = await fetch(`${API_URL}/admin/login`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ login, password }) });
         if (!response.ok) {
             const err = await response.json();
             throw new Error(err.message);
@@ -230,9 +239,11 @@ adminLoginForm.addEventListener('submit', async (e) => {
         const data = await response.json();
         token = data.token;
         localStorage.setItem('adminToken', token);
+        resetInactivityTimer();
         showView('dashboard-container');
-        currentPage = 1;
-        fetchStudents();
+        showGroupsView();
+        fetchAndRenderGroups();
+        fetchDashboardStats();
     } catch (error) {
         adminErrorMessage.textContent = error.message;
     } finally {
@@ -241,6 +252,7 @@ adminLoginForm.addEventListener('submit', async (e) => {
 });
 
 logoutButton.addEventListener('click', () => {
+    clearTimeout(inactivityTimer);
     token = null;
     localStorage.removeItem('adminToken');
     showView('admin-login-container');
@@ -254,19 +266,13 @@ cancelBtn.addEventListener('click', closeModal);
 
 studentForm.addEventListener('submit', async (e) => {
     e.preventDefault();
-    if (!validateForm()) {
-        return;
-    }
+    if (!validateForm()) return;
     const id = document.getElementById('student-id').value;
     const studentData = {
-        fullName: document.getElementById('fullName').value,
-        login: document.getElementById('login').value,
-        password: document.getElementById('password').value,
-        group_name: document.getElementById('group_name').value,
-        course: document.getElementById('course').value,
-        specialty: document.getElementById('specialty').value,
-        enrollmentDate: document.getElementById('enrollmentDate').value,
-        sessionSchedule: document.getElementById('sessionSchedule').value,
+        fullName: document.getElementById('fullName').value, login: document.getElementById('login').value,
+        password: document.getElementById('password').value, group_name: document.getElementById('group_name').value,
+        course: document.getElementById('course').value, specialty: document.getElementById('specialty').value,
+        enrollmentDate: document.getElementById('enrollmentDate').value, sessionSchedule: document.getElementById('sessionSchedule').value,
         academicDebts: document.getElementById('academicDebts').value
     };
     if (!studentData.password) {
@@ -276,21 +282,11 @@ studentForm.addEventListener('submit', async (e) => {
     const url = isEditing ? `${API_URL}/api/students/${id}` : `${API_URL}/api/students`;
     const method = isEditing ? 'PUT' : 'POST';
     try {
-        const response = await fetch(url, {
-            method: method,
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-            body: JSON.stringify(studentData)
-        });
+        const response = await fetch(url, { method: method, headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify(studentData) });
         if (!response.ok) throw new Error('Ошибка при сохранении данных');
         closeModal();
         fetchStudents();
-        Swal.fire({
-            icon: 'success',
-            title: 'Сохранено!',
-            text: 'Данные студента успешно обновлены.',
-            showConfirmButton: false,
-            timer: 1500
-        });
+        Swal.fire({ icon: 'success', title: 'Сохранено!', text: 'Данные студента успешно обновлены.', showConfirmButton: false, timer: 1500 });
     } catch (error) {
         Swal.fire({ icon: 'error', title: 'Ошибка!', text: error.message });
     }
@@ -313,7 +309,7 @@ tableHead.addEventListener('click', (e) => {
 searchInput.addEventListener('input', () => {
     clearTimeout(searchTimer);
     searchTimer = setTimeout(() => {
-        currentSearch = searchInput.value;
+        currentSearchName = searchInput.value;
         currentPage = 1;
         fetchStudents();
     }, 300);
@@ -321,10 +317,285 @@ searchInput.addEventListener('input', () => {
 
 document.addEventListener('DOMContentLoaded', () => {
     if (token) {
+        resetInactivityTimer();
         showView('dashboard-container');
-        currentPage = 1;
-        fetchStudents();
+        showGroupsView();
+        fetchAndRenderGroups();
+        fetchDashboardStats();
     } else {
         showView('admin-login-container');
     }
 });
+
+function showGroupsView() {
+    dashboardTitle.textContent = 'Группы';
+    studentsView.classList.add('hidden');
+    groupsView.classList.remove('hidden');
+}
+
+function showStudentsView(groupName) {
+    dashboardTitle.textContent = groupName === 'Все' ? 'Все студенты' : `Студенты группы №${groupName}`;
+    groupsView.classList.add('hidden');
+    studentsView.classList.remove('hidden');
+}
+
+async function fetchAndRenderGroups() {
+    try {
+        const response = await fetch(`${API_URL}/api/stats/groups`, { headers: { 'Authorization': `Bearer ${token}` } });
+        if (!response.ok) throw new Error('Не удалось загрузить список групп');
+        const groupsData = await response.json();
+        groupsContainer.innerHTML = '';
+        groupsData.forEach(group => {
+            const folder = document.createElement('div');
+            folder.className = 'folder';
+            folder.innerHTML = `<div class="folder-icon">📁</div><div class="folder-name">Группа ${group.group_name}</div><div class="folder-count">Студентов: ${group.student_count}</div>`;
+            folder.addEventListener('click', () => {
+                currentSort.key = 'full_name'; currentSort.direction = 'asc'; currentPage = 1;
+                currentGroupName = group.group_name; currentSearchName = ''; searchInput.value = '';
+                showStudentsView(group.group_name);
+                fetchStudents();
+            });
+            groupsContainer.appendChild(folder);
+        });
+    } catch (error) {
+        Swal.fire({ icon: 'error', title: 'Ошибка!', text: error.message });
+    }
+}
+
+backToGroupsBtn.addEventListener('click', () => {
+    currentGroupName = null;
+    showGroupsView();
+});
+
+allStudentsBtn.addEventListener('click', () => {
+    currentSort.key = 'full_name'; currentSort.direction = 'asc'; currentPage = 1;
+    currentGroupName = null; currentSearchName = ''; searchInput.value = '';
+    showStudentsView('Все');
+    fetchStudents();
+});
+
+async function fetchDashboardStats() {
+    try {
+        const response = await fetch(`${API_URL}/api/stats`, { headers: { 'Authorization': `Bearer ${token}` } });
+        if (!response.ok) throw new Error('Не удалось загрузить статистику');
+        const stats = await response.json();
+        totalStudentsStat.textContent = stats.totalStudents;
+        debtorsCountStat.textContent = stats.debtorsCount;
+    } catch (error) {
+        console.error(error.message);
+        totalStudentsStat.textContent = '—';
+        debtorsCountStat.textContent = '—';
+    }
+}
+
+detailsBtn.addEventListener('click', async () => {
+    try {
+        const response = await fetch(`${API_URL}/api/stats/groups`, { headers: { 'Authorization': `Bearer ${token}` } });
+        if (!response.ok) throw new Error('Не удалось загрузить статистику по группам');
+        const groupsData = await response.json();
+        groupsStatsTableBody.innerHTML = '';
+        groupsData.forEach(group => {
+            const row = document.createElement('tr');
+            row.innerHTML = `<td>${group.group_name}</td><td>${group.student_count}</td>`;
+            groupsStatsTableBody.appendChild(row);
+        });
+        detailsModal.classList.remove('hidden');
+    } catch (error) {
+        Swal.fire({ icon: 'error', title: 'Ошибка!', text: error.message });
+    }
+});
+
+detailsModalCloseBtn.addEventListener('click', () => {
+    detailsModal.classList.add('hidden');
+});
+
+groupEditorBtn.addEventListener('click', async () => {
+    groupEditorForm.reset();
+    groupSelect.innerHTML = '<option value="">-- Загрузка... --</option>';
+    groupEditorModal.classList.remove('hidden');
+    try {
+        const response = await fetch(`${API_URL}/api/stats/groups`, { headers: { 'Authorization': `Bearer ${token}` } });
+        if (!response.ok) throw new Error('Не удалось загрузить список групп');
+        const groups = await response.json();
+        groupSelect.innerHTML = '<option value="">-- Выберите группу --</option>';
+        groups.forEach(group => {
+            const option = document.createElement('option');
+            option.value = group.group_name;
+            option.textContent = `Группа ${group.group_name} (${group.student_count} чел.)`;
+            groupSelect.appendChild(option);
+        });
+    } catch (error) {
+        Swal.fire({ icon: 'error', title: 'Ошибка!', text: error.message });
+        groupEditorModal.classList.add('hidden');
+    }
+});
+
+const closeGroupEditor = () => groupEditorModal.classList.add('hidden');
+groupEditorCloseBtn.addEventListener('click', closeGroupEditor);
+groupEditorCancelBtn.addEventListener('click', closeGroupEditor);
+
+groupEditorForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const group_name = groupSelect.value;
+    if (!group_name) {
+        Swal.fire('Ошибка', 'Пожалуйста, выберите группу.', 'warning');
+        return;
+    }
+    const updates = {};
+    const course = document.getElementById('group-course').value;
+    const specialty = document.getElementById('group-specialty').value;
+    const sessionSchedule = document.getElementById('group-sessionSchedule').value;
+    const academicDebts = document.getElementById('group-academicDebts').value;
+    if (course) updates.course = course;
+    if (specialty) updates.specialty = specialty;
+    if (sessionSchedule) updates.session_schedule = sessionSchedule;
+    if (academicDebts) updates.academic_debts = academicDebts;
+    const new_group_name = newGroupNameInput.value.trim();
+    if (Object.keys(updates).length === 0 && !new_group_name) {
+        Swal.fire('Информация', 'Вы не заполнили ни одного поля для обновления.', 'info');
+        return;
+    }
+    const requestBody = { group_name, updates };
+    if (new_group_name) {
+        requestBody.new_group_name = new_group_name;
+    }
+    const result = await Swal.fire({
+        title: `Подтвердите изменения для группы ${group_name}`, text: 'Это действие затронет всех студентов в выбранной группе!', icon: 'warning',
+        showCancelButton: true, confirmButtonText: 'Да, обновить!', cancelButtonText: 'Отмена'
+    });
+    if (result.isConfirmed) {
+        try {
+            const response = await fetch(`${API_URL}/api/groups/update`, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify(requestBody) });
+            const resData = await response.json();
+            if (!response.ok) throw new Error(resData.message);
+            Swal.fire('Успех!', resData.message, 'success');
+            closeGroupEditor();
+            fetchDashboardStats();
+            fetchAndRenderGroups();
+        } catch (error) {
+            Swal.fire({ icon: 'error', title: 'Ошибка!', text: error.message });
+        }
+    }
+});
+
+incrementCourseBtn.addEventListener('click', async () => {
+    const group_name = groupSelect.value;
+    if (!group_name) {
+        Swal.fire('Ошибка', 'Сначала выберите группу.', 'warning');
+        return;
+    }
+    let currentCourse = 0;
+    try {
+        const params = new URLSearchParams({ searchGroup: group_name, limit: 1 });
+        const response = await fetch(`${API_URL}/api/students?${params.toString()}`, { headers: { 'Authorization': `Bearer ${token}` } });
+        const data = await response.json();
+        if (data.students && data.students.length > 0) {
+            currentCourse = data.students[0].course;
+        }
+    } catch (e) {
+        Swal.fire('Ошибка', 'Не удалось определить текущий курс группы.', 'error');
+        return;
+    }
+    const nextCourse = currentCourse + 1;
+    const result = await Swal.fire({
+        title: `Перевести группу ${group_name} на ${nextCourse} курс?`, text: 'Это действие обновит поле "Курс" у всех студентов группы.', icon: 'question',
+        showCancelButton: true, confirmButtonText: 'Да, перевести!', cancelButtonText: 'Отмена'
+    });
+    if (result.isConfirmed) {
+        const updates = { course: nextCourse };
+        try {
+            const response = await fetch(`${API_URL}/api/groups/update`, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ group_name, updates }) });
+            const resData = await response.json();
+            if (!response.ok) throw new Error(resData.message);
+            Swal.fire('Успех!', resData.message, 'success');
+            closeGroupEditor();
+        } catch (error) {
+            Swal.fire({ icon: 'error', title: 'Ошибка!', text: error.message });
+        }
+    }
+});
+
+decrementCourseBtn.addEventListener('click', async () => {
+    const group_name = groupSelect.value;
+    if (!group_name) {
+        Swal.fire('Ошибка', 'Сначала выберите группу.', 'warning');
+        return;
+    }
+    let currentCourse = 0;
+    try {
+        const params = new URLSearchParams({ searchGroup: group_name, limit: 1 });
+        const response = await fetch(`${API_URL}/api/students?${params.toString()}`, { headers: { 'Authorization': `Bearer ${token}` } });
+        const data = await response.json();
+        if (data.students && data.students.length > 0) {
+            currentCourse = data.students[0].course;
+        }
+    } catch (e) {}
+    const prevCourse = currentCourse - 1;
+    if (prevCourse < 1) {
+        Swal.fire('Внимание', 'Курс не может быть меньше 1.', 'info');
+        return;
+    }
+    const result = await Swal.fire({
+        title: `Понизить курс группы ${group_name} до ${prevCourse}?`, icon: 'question',
+        showCancelButton: true, confirmButtonText: 'Да, понизить!', cancelButtonText: 'Отмена'
+    });
+    if (result.isConfirmed) {
+        const updates = { course: prevCourse };
+        try {
+            const response = await fetch(`${API_URL}/api/groups/update`, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ group_name, updates }) });
+            const resData = await response.json();
+            if (!response.ok) throw new Error(resData.message);
+            Swal.fire('Успех!', resData.message, 'success');
+            closeGroupEditor();
+        } catch (error) {
+            Swal.fire({ icon: 'error', title: 'Ошибка!', text: error.message });
+        }
+    }
+});
+
+
+copyScheduleBtn.addEventListener('click', async () => {
+    const allGroups = Array.from(groupSelect.options).map(opt => opt.value).filter(val => val);
+    const { value: sourceGroup } = await Swal.fire({
+        title: 'Скопировать расписание', input: 'select',
+        inputOptions: allGroups.reduce((acc, group) => { acc[group] = `Из группы ${group}`; return acc; }, {}),
+        inputPlaceholder: 'Выберите группу-источник', showCancelButton: true, cancelButtonText: 'Отмена'
+    });
+    if (sourceGroup) {
+        try {
+            const params = new URLSearchParams({ searchGroup: sourceGroup, limit: 1 });
+            const response = await fetch(`${API_URL}/api/students?${params.toString()}`, { headers: { 'Authorization': `Bearer ${token}` } });
+            const data = await response.json();
+            if (data.students && data.students.length > 0) {
+                const schedule = data.students[0].session_schedule;
+                document.getElementById('group-sessionSchedule').value = schedule || '';
+                Swal.fire('Скопировано!', 'Расписание вставлено в форму. Теперь вы можете сохранить изменения для целевой группы.', 'info');
+            } else {
+                throw new Error('В группе-источнике нет студентов или расписания.');
+            }
+        } catch (error) {
+            Swal.fire({ icon: 'error', title: 'Ошибка!', text: error.message });
+        }
+    }
+});
+
+function handleInactivity() {
+    if (localStorage.getItem('adminToken')) {
+        Swal.fire({
+            title: 'Сессия завершена', text: 'Вы были неактивны в течение 5 минут. Пожалуйста, войдите снова.',
+            icon: 'warning', confirmButtonText: 'OK'
+        }).then(() => {
+            logoutButton.click();
+        });
+    }
+}
+
+function resetInactivityTimer() {
+    clearTimeout(inactivityTimer);
+    inactivityTimer = setTimeout(handleInactivity, INACTIVITY_TIMEOUT);
+}
+
+window.addEventListener('mousemove', resetInactivityTimer);
+window.addEventListener('mousedown', resetInactivityTimer);
+window.addEventListener('keypress', resetInactivityTimer);
+window.addEventListener('touchmove', resetInactivityTimer);
