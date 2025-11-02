@@ -1,5 +1,5 @@
 const API_URL = 'https://pinsk-college-backend.onrender.com';
-let students = [];
+let learners = [];
 let token = localStorage.getItem('adminToken');
 let currentPage = 1;
 let currentSort = { key: 'full_name', direction: 'asc' };
@@ -15,21 +15,21 @@ const adminLoginForm = document.getElementById('admin-login-form');
 const adminLoader = document.getElementById('admin-loader');
 const adminErrorMessage = document.getElementById('admin-error-message');
 const logoutButton = document.getElementById('logout-button');
-const studentsTableBody = document.getElementById('students-table-body');
-const addStudentBtn = document.getElementById('add-student-btn');
+const learnersTableBody = document.getElementById('learners-table-body');
+const addLearnerBtn = document.getElementById('add-learner-btn');
 const modal = document.getElementById('modal');
 const modalTitle = document.getElementById('modal-title');
-const studentForm = document.getElementById('student-form');
+const learnerForm = document.getElementById('learner-form');
 const cancelBtn = document.getElementById('cancel-btn');
 const searchInput = document.getElementById('search-input');
 const tableHead = document.getElementById('table-head');
 const dashboardTitle = document.getElementById('dashboard-title');
 const groupsView = document.getElementById('groups-view');
-const studentsView = document.getElementById('students-view');
+const learnersView = document.getElementById('learners-view');
 const groupsContainer = document.getElementById('groups-container');
 const backToGroupsBtn = document.getElementById('back-to-groups-btn');
-const allStudentsBtn = document.getElementById('all-students-btn');
-const totalStudentsStat = document.getElementById('total-students-stat');
+const allLearnersBtn = document.getElementById('all-learners-btn');
+const totalLearnersStat = document.getElementById('total-learners-stat');
 const debtorsCountStat = document.getElementById('debtors-count-stat');
 const detailsBtn = document.getElementById('details-btn');
 const detailsModal = document.getElementById('details-modal');
@@ -64,25 +64,25 @@ function resetInactivityTimer() {
     inactivityTimer = setTimeout(handleInactivity, INACTIVITY_TIMEOUT);
 }
 
-function renderStudents(studentsToRender) {
-    const studentsArray = studentsToRender || [];
-    studentsTableBody.innerHTML = '';
-    studentsArray.forEach(student => {
+function renderLearners(learnersToRender) {
+    const learnersArray = learnersToRender || [];
+    learnersTableBody.innerHTML = '';
+    learnersArray.forEach(learner => {
         const row = document.createElement('tr');
         row.innerHTML = `
-            <td>${student.full_name}</td>
-            <td>${student.group_name}</td>
-            <td>${student.login}</td>
+            <td>${learner.full_name}</td>
+            <td>${learner.group_name}</td>
+            <td>${learner.login}</td>
             <td class="action-buttons">
-                <button class="btn-secondary" onclick="editStudent(${student.id})">Ред.</button>
-                <button class="btn-danger" onclick="deleteStudent(${student.id})">Удал.</button>
+                <button class="btn-secondary" onclick="editLearner(${learner.id})">Ред.</button>
+                <button class="btn-danger" onclick="deleteLearner(${learner.id})">Удал.</button>
             </td>
         `;
-        studentsTableBody.appendChild(row);
+        learnersTableBody.appendChild(row);
     });
 }
 
-async function fetchStudents() {
+async function fetchLearners() {
     try {
         const params = new URLSearchParams({
             page: currentPage,
@@ -96,13 +96,13 @@ async function fetchStudents() {
         if (currentSearchName) {
             params.append('searchName', currentSearchName);
         }
-        const response = await fetch(`${API_URL}/api/students?${params.toString()}`, {
+        const response = await fetch(`${API_URL}/api/learners?${params.toString()}`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
-        if (!response.ok) throw new Error('Не удалось загрузить студентов');
+        if (!response.ok) throw new Error('Не удалось загрузить данные учащихся');
         const data = await response.json();
-        students = data.students || [];
-        renderStudents(students);
+        learners = data.learners || [];
+        renderLearners(learners);
         renderPagination(data.totalPages, data.currentPage);
         updateSortIndicators();
     } catch (error) {
@@ -130,7 +130,7 @@ function renderPagination(totalPages, pageToRender) {
         }
         button.addEventListener('click', () => {
             currentPage = i;
-            fetchStudents();
+            fetchLearners();
         });
         paginationContainer.appendChild(button);
     }
@@ -149,14 +149,14 @@ function showView(view) {
 
 function showGroupsView() {
     dashboardTitle.textContent = 'Группы';
-    studentsView.classList.add('hidden');
+    learnersView.classList.add('hidden');
     groupsView.classList.remove('hidden');
 }
 
-function showStudentsView(groupName) {
-    dashboardTitle.textContent = groupName === 'Все' ? 'Все студенты' : `Студенты группы №${groupName}`;
+function showLearnersView(groupName) {
+    dashboardTitle.textContent = groupName === 'Все' ? 'Все учащиеся' : `Учащиеся группы №${groupName}`;
     groupsView.classList.add('hidden');
-    studentsView.classList.remove('hidden');
+    learnersView.classList.remove('hidden');
 }
 
 async function fetchAndRenderGroups() {
@@ -173,7 +173,7 @@ async function fetchAndRenderGroups() {
             folder.innerHTML = `
                 <div class="folder-icon">📁</div>
                 <div class="folder-name">Группа ${group.group_name}</div>
-                <div class="folder-count">Студентов: ${group.student_count}</div>
+                <div class="folder-count">Учащихся: ${group.learner_count}</div>
             `;
             folder.addEventListener('click', () => {
                 currentSort.key = 'full_name';
@@ -182,8 +182,8 @@ async function fetchAndRenderGroups() {
                 currentGroupName = group.group_name;
                 currentSearchName = '';
                 searchInput.value = '';
-                showStudentsView(group.group_name);
-                fetchStudents();
+                showLearnersView(group.group_name);
+                fetchLearners();
             });
             groupsContainer.appendChild(folder);
         });
@@ -199,17 +199,17 @@ async function fetchDashboardStats() {
         });
         if (!response.ok) throw new Error('Не удалось загрузить статистику');
         const stats = await response.json();
-        totalStudentsStat.textContent = stats.totalStudents;
+        totalLearnersStat.textContent = stats.totalLearners;
         debtorsCountStat.textContent = stats.debtorsCount;
     } catch (error) {
         console.error(error.message);
-        totalStudentsStat.textContent = '—';
+        totalLearnersStat.textContent = '—';
         debtorsCountStat.textContent = '—';
     }
 }
 
 function validateForm() {
-    const fields = studentForm.querySelectorAll('input, textarea');
+    const fields = learnerForm.querySelectorAll('input, textarea');
     fields.forEach(field => field.classList.remove('invalid'));
     let isValid = true;
     let errorMessage = '';
@@ -230,11 +230,11 @@ function validateForm() {
         document.getElementById('group_name').classList.add('invalid');
         errorMessage = 'Поле Группа не может быть пустым.';
     }
-    const isEditing = !!document.getElementById('student-id').value;
+    const isEditing = !!document.getElementById('learner-id').value;
     if (!isEditing && !password) {
         isValid = false;
         document.getElementById('password').classList.add('invalid');
-        errorMessage = 'При создании нового студента пароль обязателен.';
+        errorMessage = 'При создании нового учащегося пароль обязателен.';
     } else if (password && password.length < 6) {
         isValid = false;
         document.getElementById('password').classList.add('invalid');
@@ -250,31 +250,31 @@ function validateForm() {
     return isValid;
 }
 
-function openModal(mode, studentId = null) {
-    studentForm.reset();
-    document.getElementById('student-id').value = '';
+function openModal(mode, learnerId = null) {
+    learnerForm.reset();
+    document.getElementById('learner-id').value = '';
     if (mode === 'add') {
-        modalTitle.textContent = 'Добавить студента';
+        modalTitle.textContent = 'Добавить учащегося';
         document.querySelector('label[for="password"]').textContent = 'Пароль:';
     } else if (mode === 'edit') {
-        modalTitle.textContent = 'Редактировать студента';
+        modalTitle.textContent = 'Редактировать учащегося';
         document.querySelector('label[for="password"]').textContent = 'Новый пароль (оставьте пустым, чтобы не менять):';
-        const student = students.find(s => Number(s.id) === Number(studentId));
-        if (student) {
-            document.getElementById('student-id').value = student.id;
-            document.getElementById('fullName').value = student.full_name;
-            document.getElementById('login').value = student.login;
-            document.getElementById('group_name').value = student.group_name;
-            document.getElementById('course').value = student.course;
-            document.getElementById('specialty').value = student.specialty || '';
-            document.getElementById('enrollmentDate').value = student.enrollment_date || '';
-            document.getElementById('sessionSchedule').value = student.session_schedule || '';
-            document.getElementById('academicDebts').value = student.academic_debts || '';
+        const learner = learners.find(s => Number(s.id) === Number(learnerId));
+        if (learner) {
+            document.getElementById('learner-id').value = learner.id;
+            document.getElementById('fullName').value = learner.full_name;
+            document.getElementById('login').value = learner.login;
+            document.getElementById('group_name').value = learner.group_name;
+            document.getElementById('course').value = learner.course;
+            document.getElementById('specialty').value = learner.specialty || '';
+            document.getElementById('enrollmentDate').value = learner.enrollment_date || '';
+            document.getElementById('sessionSchedule').value = learner.session_schedule || '';
+            document.getElementById('academicDebts').value = learner.academic_debts || '';
         } else {
             Swal.fire({
                 icon: 'error',
                 title: 'Ошибка!',
-                text: 'Не удалось найти данные студента для редактирования.',
+                text: 'Не удалось найти данные учащегося для редактирования.',
             });
             return;
         }
@@ -286,11 +286,11 @@ function closeModal() {
     modal.classList.add('hidden');
 }
 
-window.editStudent = (id) => {
+window.editLearner = (id) => {
     openModal('edit', id);
 };
 
-window.deleteStudent = async (id) => {
+window.deleteLearner = async (id) => {
     const result = await Swal.fire({
         title: 'Вы уверены?',
         text: "Это действие нельзя будет отменить!",
@@ -303,17 +303,17 @@ window.deleteStudent = async (id) => {
     });
     if (result.isConfirmed) {
         try {
-            const response = await fetch(`${API_URL}/api/students/${id}`, {
+            const response = await fetch(`${API_URL}/api/learners/${id}`, {
                 method: 'DELETE',
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             if (!response.ok) throw new Error('Ошибка при удалении');
-            Swal.fire('Удалено!', 'Данные студента были успешно удалены.', 'success');
+            Swal.fire('Удалено!', 'Данные учащегося были успешно удалены.', 'success');
             fetchDashboardStats();
-            if (students.length === 1 && currentPage > 1) {
+            if (learners.length === 1 && currentPage > 1) {
                 currentPage = currentPage - 1;
             }
-            fetchStudents();
+            fetchLearners();
         } catch (error) {
             Swal.fire({ icon: 'error', title: 'Ошибка!', text: error.message });
         }
@@ -362,19 +362,19 @@ logoutButton.addEventListener('click', () => {
     showView('admin-login-container');
 });
 
-addStudentBtn.addEventListener('click', () => {
+addLearnerBtn.addEventListener('click', () => {
     openModal('add');
 });
 
 cancelBtn.addEventListener('click', closeModal);
 
-studentForm.addEventListener('submit', async (e) => {
+learnerForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     if (!validateForm()) {
         return;
     }
-    const id = document.getElementById('student-id').value;
-    const studentData = {
+    const id = document.getElementById('learner-id').value;
+    const learnerData = {
         fullName: document.getElementById('fullName').value,
         login: document.getElementById('login').value,
         password: document.getElementById('password').value,
@@ -385,26 +385,26 @@ studentForm.addEventListener('submit', async (e) => {
         sessionSchedule: document.getElementById('sessionSchedule').value,
         academicDebts: document.getElementById('academicDebts').value
     };
-    if (!studentData.password) {
-        delete studentData.password;
+    if (!learnerData.password) {
+        delete learnerData.password;
     }
     const isEditing = !!id;
-    const url = isEditing ? `${API_URL}/api/students/${id}` : `${API_URL}/api/students`;
+    const url = isEditing ? `${API_URL}/api/learners/${id}` : `${API_URL}/api/learners`;
     const method = isEditing ? 'PUT' : 'POST';
     try {
         const response = await fetch(url, {
             method: method,
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-            body: JSON.stringify(studentData)
+            body: JSON.stringify(learnerData)
         });
         if (!response.ok) throw new Error('Ошибка при сохранении данных');
         closeModal();
         fetchDashboardStats();
-        fetchStudents();
+        fetchLearners();
         Swal.fire({
             icon: 'success',
             title: 'Сохранено!',
-            text: 'Данные студента успешно обновлены.',
+            text: 'Данные учащегося успешно обновлены.',
             showConfirmButton: false,
             timer: 1500
         });
@@ -425,7 +425,7 @@ detailsBtn.addEventListener('click', async () => {
             const row = document.createElement('tr');
             row.innerHTML = `
                 <td>${group.group_name}</td>
-                <td>${group.student_count}</td>
+                <td>${group.learner_count}</td>
             `;
             groupsStatsTableBody.appendChild(row);
         });
@@ -439,15 +439,15 @@ detailsModalCloseBtn.addEventListener('click', () => {
     detailsModal.classList.add('hidden');
 });
 
-allStudentsBtn.addEventListener('click', () => {
+allLearnersBtn.addEventListener('click', () => {
     currentSearchName = '';
     searchInput.value = '';
     currentSort.key = 'full_name';
     currentSort.direction = 'asc';
     currentPage = 1;
     currentGroupName = null;
-    showStudentsView('Все');
-    fetchStudents();
+    showLearnersView('Все');
+    fetchLearners();
 });
 
 backToGroupsBtn.addEventListener('click', () => {
@@ -466,7 +466,7 @@ tableHead.addEventListener('click', (e) => {
         currentSort.direction = 'asc';
     }
     currentPage = 1;
-    fetchStudents();
+    fetchLearners();
 });
 
 searchInput.addEventListener('input', () => {
@@ -474,7 +474,7 @@ searchInput.addEventListener('input', () => {
     searchTimer = setTimeout(() => {
         currentSearchName = searchInput.value;
         currentPage = 1;
-        fetchStudents();
+        fetchLearners();
     }, 300);
 });
 
@@ -492,7 +492,7 @@ groupEditorBtn.addEventListener('click', async () => {
         groups.forEach(group => {
             const option = document.createElement('option');
             option.value = group.group_name;
-            option.textContent = `Группа ${group.group_name} (${group.student_count} чел.)`;
+            option.textContent = `Группа ${group.group_name} (${group.learner_count} чел.)`;
             groupSelect.appendChild(option);
         });
     } catch (error) {
@@ -532,7 +532,7 @@ groupEditorForm.addEventListener('submit', async (e) => {
     }
     const result = await Swal.fire({
         title: `Подтвердите изменения для группы ${group_name}`,
-        text: 'Это действие затронет всех студентов в выбранной группе!',
+        text: 'Это действие затронет всех учащихся в выбранной группе!',
         icon: 'warning',
         showCancelButton: true,
         confirmButtonText: 'Да, обновить!',
@@ -566,10 +566,10 @@ incrementCourseBtn.addEventListener('click', async () => {
     let currentCourse = 0;
     try {
         const params = new URLSearchParams({ searchGroup: group_name, limit: 1 });
-        const response = await fetch(`${API_URL}/api/students?${params.toString()}`, { headers: { 'Authorization': `Bearer ${token}` } });
+        const response = await fetch(`${API_URL}/api/learners?${params.toString()}`, { headers: { 'Authorization': `Bearer ${token}` } });
         const data = await response.json();
-        if (data.students && data.students.length > 0) {
-            currentCourse = data.students[0].course;
+        if (data.learners && data.learners.length > 0) {
+            currentCourse = data.learners[0].course;
         }
     } catch (e) {
         Swal.fire('Ошибка', 'Не удалось определить текущий курс группы.', 'error');
@@ -578,7 +578,7 @@ incrementCourseBtn.addEventListener('click', async () => {
     const nextCourse = currentCourse + 1;
     const result = await Swal.fire({
         title: `Перевести группу ${group_name} на ${nextCourse} курс?`,
-        text: 'Это действие обновит поле "Курс" у всех студентов группы.',
+        text: 'Это действие обновит поле "Курс" у всех учащихся группы.',
         icon: 'question',
         showCancelButton: true,
         confirmButtonText: 'Да, перевести!',
@@ -611,10 +611,10 @@ decrementCourseBtn.addEventListener('click', async () => {
     let currentCourse = 0;
     try {
         const params = new URLSearchParams({ searchGroup: group_name, limit: 1 });
-        const response = await fetch(`${API_URL}/api/students?${params.toString()}`, { headers: { 'Authorization': `Bearer ${token}` } });
+        const response = await fetch(`${API_URL}/api/learners?${params.toString()}`, { headers: { 'Authorization': `Bearer ${token}` } });
         const data = await response.json();
-        if (data.students && data.students.length > 0) {
-            currentCourse = data.students[0].course;
+        if (data.learners && data.learners.length > 0) {
+            currentCourse = data.learners[0].course;
         }
     } catch (e) { }
     const prevCourse = currentCourse - 1;
@@ -663,14 +663,14 @@ copyScheduleBtn.addEventListener('click', async () => {
     if (sourceGroup) {
         try {
             const params = new URLSearchParams({ searchGroup: sourceGroup, limit: 1 });
-            const response = await fetch(`${API_URL}/api/students?${params.toString()}`, { headers: { 'Authorization': `Bearer ${token}` } });
+            const response = await fetch(`${API_URL}/api/learners?${params.toString()}`, { headers: { 'Authorization': `Bearer ${token}` } });
             const data = await response.json();
-            if (data.students && data.students.length > 0) {
-                const schedule = data.students[0].session_schedule;
+            if (data.learners && data.learners.length > 0) {
+                const schedule = data.learners[0].session_schedule;
                 document.getElementById('group-sessionSchedule').value = schedule || '';
                 Swal.fire('Скопировано!', 'Расписание вставлено в форму. Теперь вы можете сохранить изменения для целевой группы.', 'info');
             } else {
-                throw new Error('В группе-источнике нет студентов или расписания.');
+                throw new Error('В группе-источнике нет учащихся или расписания.');
             }
         } catch (error) {
             Swal.fire({ icon: 'error', title: 'Ошибка!', text: error.message });

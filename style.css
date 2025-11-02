@@ -50,7 +50,7 @@ hr { border: 0; border-top: 1px solid #eee; margin: 20px 0; }
 .pdf-controls button { width: auto; padding: 8px 12px; }
 
 
-#student-info-container {
+#learner-info-container {
     -webkit-user-select: none;
     -moz-user-select: none;
     -ms-user-select: none;

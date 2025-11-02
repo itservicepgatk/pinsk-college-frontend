@@ -29,28 +29,28 @@
         </div>
         <div class="dashboard-stats">
             <div class="stat-card">
-                <div class="stat-label">Всего студентов</div>
-                <div class="stat-value" id="total-students-stat">...</div>
+                <div class="stat-label">Всего учащихся</div>
+                <div class="stat-value" id="total-learners-stat">...</div>
                 <button id="details-btn" class="btn-details">Подробнее</button>
             </div>
             <div class="stat-card">
-                <div class="stat-label">Студентов с задолженностями</div>
+                <div class="stat-label">Учащихся с задолженностями</div>
                 <div class="stat-value" id="debtors-count-stat">...</div>
             </div>
         </div>
         <div id="groups-view">
             <div class="all-students-container">
-                <button id="all-students-btn" class="btn-secondary">Показать всех студентов</button>
+                <button id="all-learners-btn" class="btn-secondary">Показать всех учащихся</button>
                 <button id="group-editor-btn" class="btn-primary">Редактор группы</button>
             </div>
             <div id="groups-container" class="folders-container">
             </div>
         </div>
-        <div id="students-view" class="hidden">
+        <div id="learners-view" class="hidden">
             <button id="back-to-groups-btn" class="btn-secondary">← Назад к группам</button>
-            <button id="add-student-btn" class="btn-primary">Добавить студента</button>
+            <button id="add-learner-btn" class="btn-primary">Добавить учащегося</button>
             <input type="text" id="search-input" placeholder="Поиск по ФИО...">
-            <table id="students-table">
+            <table id="learners-table">
                 <thead id="table-head">
                     <tr>
                         <th data-sort-by="full_name">ФИО</th>
@@ -59,7 +59,7 @@
                         <th>Действия</th>
                     </tr>
                 </thead>
-                <tbody id="students-table-body">
+                <tbody id="learners-table-body">
                 </tbody>
             </table>
             <div id="pagination-container"></div>
@@ -67,9 +67,9 @@
     </div>
     <div id="modal" class="modal-overlay hidden">
         <div class="modal-content">
-            <h2 id="modal-title">Добавить студента</h2>
-            <form id="student-form">
-                <input type="hidden" id="student-id">
+            <h2 id="modal-title">Добавить учащегося</h2>
+            <form id="learner-form">
+                <input type="hidden" id="learner-id">
                 <label for="fullName">ФИО:</label>
                 <input type="text" id="fullName" required>
                 <label for="login">Логин:</label>
@@ -105,7 +105,7 @@
                 <thead>
                     <tr>
                         <th>Номер группы</th>
-                        <th>Количество студентов</th>
+                        <th>Количество учащихся</th>
                     </tr>
                 </thead>
                 <tbody id="groups-stats-table-body">

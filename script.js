@@ -1,10 +1,10 @@
 const API_URL = 'https://pinsk-college-backend.onrender.com';
 
 const loginFormContainer = document.getElementById('login-form-container');
-const studentInfoContainer = document.getElementById('student-info-container');
+const learnerInfoContainer = document.getElementById('learner-info-container');
 const loginForm = document.getElementById('login-form');
 const errorMessage = document.getElementById('error-message');
-const studentInfoDiv = document.getElementById('student-info');
+const learnerInfoDiv = document.getElementById('learner-info');
 const logoutButton = document.getElementById('logout-button');
 const loader = document.getElementById('loader');
 const slowConnectionMessage = document.getElementById('slow-connection-message');
@@ -45,8 +45,8 @@ loginForm.addEventListener('submit', async (event) => {
             throw new Error(errorData.message || 'Произошла ошибка');
         }
         const data = await response.json();
-        localStorage.setItem('studentToken', data.token);
-        displayStudentInfo(data.studentData);
+        localStorage.setItem('learnerToken', data.token);
+        displayLearnerInfo(data.learnerData);
     } catch (error) {
         errorMessage.textContent = error.message;
     } finally {
@@ -57,10 +57,10 @@ loginForm.addEventListener('submit', async (event) => {
     }
 });
 
-function displayStudentInfo(data) {
+function displayLearnerInfo(data) {
     loginFormContainer.classList.add('hidden');
-    studentInfoContainer.classList.remove('hidden');
-    studentInfoDiv.innerHTML = `
+    learnerInfoContainer.classList.remove('hidden');
+    learnerInfoDiv.innerHTML = `
         <div class="info-row">
             <span class="info-label">ФИО:</span>
             <span class="info-value">${data.fullName}</span>
@@ -111,8 +111,8 @@ function displayStudentInfo(data) {
 }
 
 logoutButton.addEventListener('click', () => {
-    localStorage.removeItem('studentToken');
-    studentInfoContainer.classList.add('hidden');
+    localStorage.removeItem('learnerToken');
+    learnerInfoContainer.classList.add('hidden');
     loginFormContainer.classList.remove('hidden');
     loginForm.reset();
 });
@@ -153,7 +153,7 @@ async function openPdfViewer(path, name) {
     pdfTitle.textContent = name;
     pdfModal.style.display = 'flex';
     const url = `${API_URL}/api/material?path=${encodeURIComponent(path)}`;
-    const token = localStorage.getItem('studentToken');
+    const token = localStorage.getItem('learnerToken');
     if (!token) {
         Swal.fire('Ошибка', 'Ваша сессия истекла. Пожалуйста, войдите заново.', 'error');
         return;
@@ -184,13 +184,13 @@ async function openPdfViewer(path, name) {
 }
 
 document.addEventListener('contextmenu', (event) => {
-    if (!studentInfoContainer.classList.contains('hidden')) {
+    if (!learnerInfoContainer.classList.contains('hidden')) {
         event.preventDefault();
     }
 });
 
 window.addEventListener('keydown', function(event) {
-    if (studentInfoContainer.classList.contains('hidden')) {
+    if (learnerInfoContainer.classList.contains('hidden')) {
         return;
     }
     if (event.ctrlKey || event.metaKey) {
