@@ -9,36 +9,21 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body>
-
-    <div id="admin-login-view-container">
-        <div class="avatar"></div>
-        <h1 class="main-title">Портал колледжа</h1>
-        <p class="subtitle">Пожалуйста, войдите в свой аккаунт</p>
-        <div class="form-card">
-            <div class="tabs">
-                <a href="index.html" class="tab">Учащийся</a>
-                <a href="#" class="tab active">Администратор</a>
-            </div>
-            <form id="admin-login-form">
-                <div class="form-group">
-                    <label for="admin-login">Логин</label>
-                    <input type="text" id="admin-login" required>
-                </div>
-                <div class="form-group">
-                    <label for="admin-password">Пароль</label>
-                    <input type="password" id="admin-password" required>
-                </div>
-                <button type="submit">Войти</button>
-                <div id="admin-loader" class="loader hidden"></div>
-                <p id="admin-error-message" class="error"></p>
-            </form>
-        </div>
+<div id="maintenance-banner">
+    <strong>Внимание!</strong> На портале ведутся технические работы. Возможны временные ошибки и нестабильная работа.
+</div>
+    
+    <div id="admin-login-view-container" class="hidden">
+        <!-- Этот блок остается для обратной совместимости со скриптом, но больше не должен отображаться -->
     </div>
     
     <div id="dashboard-container" class="hidden">
         <div class="dashboard-header">
             <h1 id="dashboard-title">Группы</h1>
-            <button id="logout-button">Выйти</button>
+            <div>
+                <button id="audit-log-btn" class="btn-secondary" style="margin-right: 10px;">История действий</button>
+                <button id="logout-button">Выйти</button>
+            </div>
         </div>
         <div class="dashboard-stats">
             <div class="stat-card">
@@ -52,20 +37,45 @@
             </div>
         </div>
         <div id="groups-view">
-            <div class="main-actions">
+            <div class="main-actions" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
                 <button id="all-learners-btn">Показать всех учащихся</button>
                 <button id="group-editor-btn">Редактор группы</button>
+                <button id="material-manager-btn" style="background-color: #ffc107; color: black;">Управление материалами</button>
+                <button id="manage-admins-btn" class="super-admin-feature hidden" style="background-color: #17a2b8; color: white;">Администраторы</button>
+                <button id="manage-backups-btn" class="super-admin-feature hidden" style="background-color: #343a40; color: white;">Управление бэкапами</button>
+                <div class="super-admin-feature hidden" id="maintenance-mode-container">
+                    <label for="maintenance-toggle" class="maintenance-label">Режим тестирования</label>
+                    <label class="switch">
+                        <input type="checkbox" id="maintenance-toggle">
+                        <span class="slider round"></span>
+                    </label>
+                </div>
             </div>
             <div id="groups-container" class="folders-container">
             </div>
         </div>
         <div id="learners-view" class="hidden">
-            <button id="back-to-groups-btn">← Назад к группам</button>
-            <button id="add-learner-btn">Добавить учащегося</button>
-            <input type="text" id="search-input" placeholder="Поиск по ФИО...">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <button id="back-to-groups-btn">← Назад к группам</button>
+                    <button id="add-learner-btn">Добавить учащегося</button>
+                    <button id="import-csv-btn" class="btn-secondary">Импорт из CSV</button>
+                    <button id="export-csv-btn" class="btn-secondary">Экспорт в CSV</button>
+                    <button id="import-instructions-btn" class="btn-secondary">Инструкция</button>
+                    <input type="file" id="csv-file-input" class="hidden" accept=".csv">
+                </div>
+                <button id="delete-selected-btn" class="btn-danger hidden" style="margin-right: 10px;">Удалить выбранных (0)</button>
+            </div>
+            <div class="filters-container" style="display: flex; gap: 15px; margin-top: 20px; margin-bottom: 10px;">
+                <input type="text" id="search-input" placeholder="Поиск по ФИО..." style="flex-grow: 1; margin: 0;">
+                <select id="group-filter-select" style="min-width: 200px; font-size: 16px; padding: 10px; border-radius: 8px; border: 1px solid #ccc;">
+                    <option value="">-- Все группы --</option>
+                </select>
+            </div>
             <table id="learners-table">
                 <thead id="table-head">
                     <tr>
+                        <th style="width: 20px;"><input type="checkbox" id="select-all-checkbox"></th>
                         <th data-sort-by="full_name">ФИО</th>
                         <th data-sort-by="group_name">Группа</th>
                         <th data-sort-by="login">Логин</th>
@@ -76,151 +86,141 @@
                 </tbody>
             </table>
             <div id="pagination-container">
-    <div class="pagination-wrapper"></div>
-</div>
+                <div class="pagination-wrapper"></div>
+            </div>
         </div>
     </div>
-
-<div id="modal" class="modal-overlay hidden">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h2 id="modal-title">Редактировать учащегося</h2>
-            <button class="close-btn" onclick="closeModal()">&times;</button>
+    <div id="modal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modal-title">Редактировать учащегося</h2>
+                <button class="close-btn" id="cancel-btn">&times;</button>
+            </div>
+            <form id="learner-form">
+                <input type="hidden" id="learner-id">
+                <div class="modal-form-grid">
+                    <div class="form-group-modal"><label for="fullName">ФИО:</label><input type="text" id="fullName" required></div>
+                    <div class="form-group-modal"><label for="login">Логин:</label><input type="text" id="login" required></div>
+                    <div class="form-group-modal grid-col-span-2"><label for="password">Новый пароль (оставьте пустым, чтобы не менять):</label><input type="password" id="password"></div>
+                    <div class="form-group-modal"><label for="group_name">Группа:</label><input type="text" id="group_name" required></div>
+                    <div class="form-group-modal"><label for="course">Курс:</label><input type="number" id="course" required></div>
+                    <div class="form-group-modal"><label for="specialty">Специальность:</label><input type="text" id="specialty"></div>
+                    <div class="form-group-modal"><label for="enrollmentDate">Дата зачисления:</label><input type="text" id="enrollmentDate"></div>
+                    <div class="form-group-modal grid-col-span-2"><label for="sessionSchedule">Расписание сессий:</label><textarea id="sessionSchedule" rows="3"></textarea></div>
+                    <div class="form-group-modal grid-col-span-2"><label for="academicDebts">Академические задолженности:</label><textarea id="academicDebts" rows="3"></textarea></div>
+                </div>
+                <div class="modal-buttons"><button type="submit" class="btn-primary">Сохранить</button></div>
+            </form>
         </div>
-        <form id="learner-form">
-            <input type="hidden" id="learner-id">
-            
-            <div class="modal-form-grid">
-                <div class="form-group-modal">
-                    <label for="fullName">ФИО:</label>
-                    <input type="text" id="fullName" required>
-                </div>
-
-                <div class="form-group-modal">
-                    <label for="login">Логин:</label>
-                    <input type="text" id="login" required>
-                </div>
-
-                <div class="form-group-modal grid-col-span-2">
-                    <label for="password">Новый пароль (оставьте пустым, чтобы не менять):</label>
-                    <input type="password" id="password">
-                </div>
-
-                <div class="form-group-modal">
-                    <label for="group_name">Группа:</label>
-                    <input type="text" id="group_name" required>
-                </div>
-
-                <div class="form-group-modal">
-                    <label for="course">Курс:</label>
-                    <input type="number" id="course" required>
-                </div>
-                
-                <div class="form-group-modal">
-                    <label for="specialty">Специальность:</label>
-                    <input type="text" id="specialty">
-                </div>
-                
-                <div class="form-group-modal">
-                    <label for="enrollmentDate">Дата зачисления:</label>
-                    <input type="text" id="enrollmentDate">
-                </div>
-                
-                <div class="form-group-modal grid-col-span-2">
-                    <label for="sessionSchedule">Расписание сессий:</label>
-                    <textarea id="sessionSchedule" rows="3"></textarea>
-                </div>
-
-                <div class="form-group-modal grid-col-span-2">
-                    <label for="academicDebts">Академические задолженности:</label>
-                    <textarea id="academicDebts" rows="3"></textarea>
-                </div>
-            </div>
-
-            <div class="modal-buttons">
-                <button type="submit" class="btn-primary">Сохранить</button>
-                <button type="button" id="cancel-btn" class="btn-cancel">Отмена</button>
-            </div>
-        </form>
     </div>
-</div>
     <div id="details-modal" class="modal-overlay hidden">
         <div class="modal-content">
             <div class="modal-header">
-                <h2>Статистика по группам</h2>
-                <button id="details-modal-close-btn" class="close-btn">&times;</button>
+                <h2>Статистика по группам</h2><button id="details-modal-close-btn" class="close-btn">&times;</button>
             </div>
             <table id="groups-stats-table">
-                <thead>
-                    <tr>
-                        <th>Номер группы</th>
-                        <th>Количество учащихся</th>
-                    </tr>
-                </thead>
-                <tbody id="groups-stats-table-body">
-                </tbody>
+                <thead><tr><th>Номер группы</th><th>Количество учащихся</th></tr></thead>
+                <tbody id="groups-stats-table-body"></tbody>
             </table>
         </div>
     </div>
-<div id="group-editor-modal" class="modal-overlay hidden">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h2>Редактор группы</h2>
-            <button id="group-editor-close-btn" class="close-btn">&times;</button>
+    <div id="group-editor-modal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Редактор группы</h2><button id="group-editor-close-btn" class="close-btn">&times;</button>
+            </div>
+            <form id="group-editor-form">
+                <div class="modal-form-grid">
+                    <div class="form-group-modal"><label for="group-select">Выберите группу:</label><select id="group-select" required><option value="">-- Загрузка... --</option></select></div>
+                    <div class="form-group-modal"><label for="new-group-name">Новый номер группы (оставьте пустым):</label><input type="text" id="new-group-name" placeholder="Например, 218"></div>
+                </div>
+                <div class="quick-actions"><button type="button" id="decrement-course-btn">Понизить курс на -1</button><button type="button" id="increment-course-btn">Перевести на +1 курс</button><button type="button" id="copy-schedule-btn">Скопировать расписание</button></div>
+                <p class="form-hint">Заполните только те поля, которые хотите обновить для всей группы. Пустые поля не будут изменены.</p>
+                <div class="modal-form-grid">
+                    <div class="form-group-modal"><label for="group-course">Курс:</label><input type="number" id="group-course"></div>
+                    <div class="form-group-modal"><label for="group-specialty">Специальность:</label><input type="text" id="group-specialty"></div>
+                    <div class="form-group-modal"><label for="group-sessionSchedule">Расписание сессий:</label><textarea id="group-sessionSchedule" rows="3"></textarea></div>
+                    <div class="form-group-modal"><label for="group-academicDebts">Академические задолженности:</label><textarea id="group-academicDebts" rows="3"></textarea></div>
+                </div>
+                <div class="modal-buttons"><button type="submit" class="btn-primary">Обновить группу</button><button type="button" id="group-editor-cancel-btn" class="btn-cancel">Отмена</button></div>
+            </form>
         </div>
-        <form id="group-editor-form">
-            <div class="modal-form-grid">
-                <div class="form-group-modal">
-                    <label for="group-select">Выберите группу:</label>
-                    <select id="group-select" required>
-                        <option value="">-- Загрузка... --</option>
-                    </select>
-                </div>
-
-                <div class="form-group-modal">
-                    <label for="new-group-name">Новый номер группы (оставьте пустым):</label>
-                    <input type="text" id="new-group-name" placeholder="Например, 218">
-                </div>
-            </div>
-
-            <div class="quick-actions">
-                <button type="button" id="decrement-course-btn">Понизить курс на -1</button>
-                <button type="button" id="increment-course-btn">Перевести на +1 курс</button>
-                <button type="button" id="copy-schedule-btn">Скопировать расписание</button>
-            </div>
-
-            <p class="form-hint">Заполните только те поля, которые хотите обновить для всей группы. Пустые поля не будут изменены.</p>
-
-            <div class="modal-form-grid">
-                <div class="form-group-modal">
-                    <label for="group-course">Курс:</label>
-                    <input type="number" id="group-course">
-                </div>
-
-                <div class="form-group-modal">
-                    <label for="group-specialty">Специальность:</label>
-                    <input type="text" id="group-specialty">
-                </div>
-
-                <div class="form-group-modal">
-                    <label for="group-sessionSchedule">Расписание сессий:</label>
-                    <textarea id="group-sessionSchedule" rows="3"></textarea>
-                </div>
-                
-                <div class="form-group-modal">
-                    <label for="group-academicDebts">Академические задолженности:</label>
-                    <textarea id="group-academicDebts" rows="3"></textarea>
-                </div>
-            </div>
-
-            <div class="modal-buttons">
-                <button type="submit" class="btn-primary">Обновить группу</button>
-                <button type="button" id="group-editor-cancel-btn" class="btn-cancel">Отмена</button>
-            </div>
-        </form>
     </div>
-</div>
+    <div id="material-manager-modal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Управление материалами</h2><button id="material-manager-close-btn" class="close-btn">&times;</button>
+            </div>
+            <form id="material-manager-form">
+                <div class="form-group-modal"><label for="material-group-select">Выберите группу:</label><select id="material-group-select" required><option value="">-- Загрузка... --</option></select></div>
+                <div id="materials-list-container" class="hidden" style="margin-top: 20px;">
+                    <h4>Загруженные материалы:</h4>
+                    <div id="current-materials-list" style="max-height: 200px; overflow-y: auto; border: 1px solid #eee; padding: 10px; border-radius: 6px;"><p>Выберите группу для просмотра материалов.</p></div>
+                </div>
+                <div id="upload-material-container" class="hidden" style="margin-top: 20px;">
+                     <h4>Загрузить новый материал:</h4>
+                     <div class="form-group-modal"><label for="material-file-input">Выберите PDF файл:</label><input type="file" id="material-file-input" accept=".pdf" required></div>
+                     <div class="modal-buttons" style="padding-top: 0; border-top: none;"><button type="submit" class="btn-primary">Загрузить</button></div>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div id="audit-log-modal" class="modal-overlay hidden">
+        <div class="modal-content" style="max-width: 1000px;">
+            <div class="modal-header">
+                <h2>История действий</h2>
+                <div><button id="export-audit-log-btn" class="btn-secondary super-admin-feature" style="margin-right: 10px;">Экспорт в CSV</button><button id="clear-audit-log-btn" class="btn-danger super-admin-feature" style="margin-right: 10px;">Очистить логи</button><button id="audit-log-close-btn" class="close-btn">&times;</button></div>
+            </div>
+            <div id="audit-filters" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; margin-bottom: 20px; align-items: flex-end;">
+                <div class="form-group-modal" style="margin: 0;"><label>Администратор:</label><select id="audit-admin-filter"><option value="">Все</option></select></div>
+                <div class="form-group-modal" style="margin: 0;"><label>Тип действия:</label><select id="audit-action-filter"><option value="">Все</option></select></div>
+                 <div class="form-group-modal" style="margin: 0;"><label>Дата с:</label><input type="date" id="audit-start-date"></div>
+                <div class="form-group-modal" style="margin: 0;"><label>Дата по:</label><input type="date" id="audit-end-date"></div>
+                 <div class="form-group-modal" style="margin: 0; grid-column: span 2;"><label>Поиск в описании:</label><input type="text" id="audit-search-input" placeholder="Например, имя учащегося или номер группы"></div>
+                <div><button id="audit-apply-filters-btn" class="btn-primary" style="width: 100%; height: 42px;">Применить</button></div>
+                 <div><button id="audit-reset-filters-btn" class="btn-cancel" style="width: 100%; height: 42px;">Сбросить</button></div>
+            </div>
+            <div style="overflow-x: auto;">
+                <table id="audit-log-table" class="learners-table" style="width: 100%;">
+                    <thead><tr><th>Время</th><th>Действие</th><th>Описание</th><th>Администратор</th><th class="super-admin-feature">Действия</th></tr></thead>
+                    <tbody id="audit-log-table-body"></tbody>
+                </table>
+            </div>
+            <div id="audit-pagination-container" class="pagination-container" style="justify-content: center; margin-top: 20px;"><div class="pagination-wrapper"></div></div>
+        </div>
+    </div>
+    <div id="backup-manager-modal" class="modal-overlay hidden">
+        <div class="modal-content" style="max-width: 800px;">
+            <div class="modal-header">
+                <h2>Управление резервными копиями</h2><button id="backup-manager-close-btn" class="close-btn">&times;</button>
+            </div>
+            <p class="form-hint">Автоматическое резервное копирование выполняется каждые 5 часов. Здесь вы можете создать копию вручную или восстановить данные из существующей.</p>
+            <button id="create-backup-manual-btn" class="btn-primary" style="margin-bottom: 20px;">Создать бэкап сейчас</button>
+            <h4>Доступные резервные копии:</h4>
+            <div id="backup-list-container" style="max-height: 400px; overflow-y: auto; border: 1px solid #eee; padding: 10px; border-radius: 6px;"><p>Загрузка...</p></div>
+        </div>
+    </div>
+    <div id="manage-admins-modal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Управление администраторами</h2><button id="manage-admins-close-btn" class="close-btn">&times;</button>
+            </div>
+            <h4>Добавить администратора</h4>
+            <form id="add-admin-form" style="display: flex; gap: 10px; margin-bottom: 20px; align-items: flex-end;">
+                <div class="form-group-modal" style="flex-grow: 1;"><label>Логин:</label><input type="text" id="new-admin-login" required></div>
+                <div class="form-group-modal" style="flex-grow: 1;"><label>Пароль:</label><input type="password" id="new-admin-password" required></div>
+                <button type="submit" class="btn-primary" style="height: 42px;">Добавить</button>
+            </form>
+            <h4>Список администраторов</h4>
+            <div style="max-height: 300px; overflow-y: auto;">
+                <table id="admins-table" style="width: 100%;">
+                    <thead><tr><th>Логин</th><th>Роль</th><th>Действия</th></tr></thead>
+                    <tbody id="admins-table-body"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
     
-    <script src="admin-script.js"></script>
+    <script type="module" src="admin/app.js"></script>
 </body>
 </html>

@@ -10,32 +10,49 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
 </head>
 <body>
-    
+<div id="maintenance-banner">
+    <strong>Внимание!</strong> На портале ведутся технические работы. Возможны временные ошибки и нестабильная работа.
+</div>
+
     <div id="app-wrapper">
         <div id="login-view-container">
             <div class="avatar"></div>
             <h1 class="main-title">Портал колледжа</h1>
             <p class="subtitle">Пожалуйста, войдите в свой аккаунт</p>
-
             <div class="form-card">
                 <div class="tabs">
-                    <a href="#" class="tab active">Учащийся</a>
-                    <a href="admin.html" class="tab">Администратор</a>
+                    <a href="#" class="tab active" data-form="learner">Учащийся</a>
+                    <a href="#" class="tab" data-form="admin">Администратор</a>
                 </div>
-                <form id="login-form">
-                    <div class="form-group">
-                        <label for="login">Логин</label>
-                        <input type="text" id="login" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="password">Пароль</label>
-                        <input type="password" id="password" required>
-                    </div>
-                    <button type="submit">Войти</button>
-                    <div id="loader" class="loader hidden"></div>
-                    <p id="error-message" class="error"></p>
-                    <p id="slow-connection-message" class="info hidden"></p>
-                </form>
+                <div id="login-forms-container">
+                    <form id="login-form" class="login-form active">
+                        <div class="form-group">
+                            <label for="login">Логин</label>
+                            <input type="text" id="login" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="password">Пароль</label>
+                            <input type="password" id="password" required>
+                        </div>
+                        <button type="submit">Войти</button>
+                        <div id="loader" class="loader hidden"></div>
+                        <p id="error-message" class="error"></p>
+                        <p id="slow-connection-message" class="info hidden"></p>
+                    </form>
+                    <form id="admin-login-form" class="login-form">
+                        <div class="form-group">
+                            <label for="admin-login">Логин</label>
+                            <input type="text" id="admin-login" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="admin-password">Пароль</label>
+                            <input type="password" id="admin-password" required>
+                        </div>
+                        <button type="submit">Войти</button>
+                        <div id="admin-loader" class="loader hidden"></div>
+                        <p id="admin-error-message" class="error"></p>
+                    </form>
+                </div>
             </div>
         </div>
         
@@ -48,13 +65,11 @@
             <div class="dashboard-content">
                 <div id="personal-data-panel" class="panel">
                     <h2>Личные данные</h2>
-                    <div id="personal-data-content">
-                    </div>
+                    <div id="personal-data-content"></div>
                 </div>
                 <div id="materials-panel" class="panel">
                     <h2>Учебные материалы</h2>
-                    <div id="materials-list">
-                    </div>
+                    <div id="materials-list"></div>
                 </div>
             </div>
         </div>
@@ -82,6 +97,5 @@
     <div id="save-blocker" style="display: none;">
         Сохранение страницы отключено.
     </div>
-
 </body>
 </html>
