@@ -1,23 +1,29 @@
 import { DOMElements } from '../dom.js';
 import * as api from '../api.js';
 import * as ui from '../ui.js';
+
 let currentSessionPage = 1;
+
 function formatStatus(isOnline, isActive) {
     if (isOnline && isActive) {
         return '<span class="status-dot online"></span> Онлайн';
     }
     return '<span class="status-dot offline"></span> Офлайн';
 }
+
 function formatDate(dateString) {
     if (!dateString) return '—';
     return new Date(dateString).toLocaleString('ru-RU');
 }
+
 function formatFlag(countryCode) {
     if (countryCode) {
         return `<img src="https:
     }
+    
     return `<svg class="flag-placeholder" xmlns="http:
 }
+
 function renderSessionLogs(logs) {
     DOMElements.sessionsLogTableBody.innerHTML = '';
     if (!logs || logs.length === 0) {
@@ -46,6 +52,7 @@ function renderSessionLogs(logs) {
         DOMElements.sessionsLogTableBody.appendChild(row);
     });
 }
+
 async function fetchSessionLogs() {
     try {
         const params = new URLSearchParams({ page: currentSessionPage, limit: 15 });
@@ -60,11 +67,15 @@ async function fetchSessionLogs() {
         ui.showAlert('error', 'Ошибка!', error.message);
     }
 }
+
 export function initializeSessions() {
     if (!DOMElements.sessionsManagerBtn) return;
+    
     DOMElements.sessionsManagerBtn.addEventListener('click', () => {
         const isHidden = DOMElements.sessionsManagerModal.classList.contains('hidden');
+
         DOMElements.auditLogModal.classList.add('hidden');
+
         if (isHidden) {
             currentSessionPage = 1;
             DOMElements.sessionsManagerModal.classList.remove('hidden');
@@ -73,6 +84,7 @@ export function initializeSessions() {
             DOMElements.sessionsManagerModal.classList.add('hidden');
         }
     });
+
     DOMElements.sessionsManagerCloseBtn.addEventListener('click', () => {
         DOMElements.sessionsManagerModal.classList.add('hidden');
     });

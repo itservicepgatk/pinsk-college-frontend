@@ -1,6 +1,7 @@
 import { DOMElements } from '../dom.js';
 import * as api from '../api.js';
 import * as ui from '../ui.js';
+
 async function fetchAndRenderBackups() {
     DOMElements.backupListContainer.innerHTML = '<p>Загрузка...</p>';
     try {
@@ -25,6 +26,7 @@ async function fetchAndRenderBackups() {
         DOMElements.backupListContainer.innerHTML = `<p style="color: red;">${error.message}</p>`;
     }
 }
+
 async function createManualBackup() {
     if (await ui.showConfirm('Создать резервную копию?', 'Это может занять некоторое время.', 'Да, создать')) {
         try {
@@ -39,6 +41,7 @@ async function createManualBackup() {
         }
     }
 }
+
 async function handleRestore(fileName) {
     const { value: confirmation } = await Swal.fire({
         title: 'ПОДТВЕРДИТЕ ДЕЙСТВИЕ',
@@ -54,6 +57,7 @@ async function handleRestore(fileName) {
         cancelButtonText: 'Отмена',
         inputValidator: (value) => value !== fileName ? 'Имя файла не совпадает!' : null
     });
+
     if (confirmation) {
         try {
             Swal.fire({ title: 'Восстановление...', didOpen: () => Swal.showLoading(), allowOutsideClick: false });
@@ -65,6 +69,7 @@ async function handleRestore(fileName) {
         }
     }
 }
+
 async function handleDelete(fileName) {
     const { value: password } = await Swal.fire({
         title: 'Подтвердите удаление',
@@ -96,6 +101,7 @@ async function handleDelete(fileName) {
         fetchAndRenderBackups();
     }
 }
+
 function handleBackupActions(e) {
     const target = e.target;
     const item = target.closest('.backup-item');
@@ -107,6 +113,7 @@ function handleBackupActions(e) {
         handleDelete(fileName);
     }
 }
+
 export function initializeBackups() {
     if (!DOMElements.manageBackupsBtn) return;
     DOMElements.manageBackupsBtn.addEventListener('click', () => {

@@ -1,6 +1,7 @@
 import { DOMElements } from '../dom.js';
 import * as api from '../api.js';
 import * as ui from '../ui.js';
+
 async function fetchDashboardStats() {
     try {
         const stats = await api.getDashboardStats();
@@ -12,15 +13,18 @@ async function fetchDashboardStats() {
         DOMElements.debtorsCountStat.textContent = '—';
     }
 }
+
 function createDebtorsList(debtors) {
     if (!debtors || debtors.length === 0) {
         return '<span class="debtor-info-none">Нет</span>';
     }
+
     const listItems = debtors.map(d => `
         <li>
             <strong>${d.full_name}:</strong> ${d.debt}
         </li>
     `).join('');
+    
     return `
         <div class="debtor-info">
             ${debtors.length}
@@ -29,6 +33,8 @@ function createDebtorsList(debtors) {
         </div>
     `;
 }
+
+
 async function openDetailsModal() {
     try {
         const groupsData = await api.getGroups();
@@ -48,19 +54,23 @@ async function openDetailsModal() {
         ui.showAlert('error', 'Ошибка!', error.message);
     }
 }
+
 function handleDebtorTooltip(e) {
     const btn = e.target.closest('.debtor-info-btn');
     if (!btn) return;
+    
     const tooltip = btn.nextElementSibling;
     if (tooltip) {
         tooltip.classList.toggle('hidden');
     }
 }
+
 export function initializeDashboard() {
     fetchDashboardStats();
     DOMElements.detailsBtn.addEventListener('click', openDetailsModal);
     DOMElements.detailsModalCloseBtn.addEventListener('click', () => {
         DOMElements.detailsModal.classList.add('hidden');
     });
+    
     DOMElements.groupsStatsTableBody.addEventListener('click', handleDebtorTooltip);
 }

@@ -8,6 +8,7 @@ export const state = {
     currentSearchName: '',
     currentGroupName: null,
 };
+
 export function updateState(newState) {
     Object.assign(state, newState);
 }
