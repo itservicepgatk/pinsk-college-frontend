@@ -2,9 +2,7 @@ import { DOMElements } from '../dom.js';
 import * as api from '../api.js';
 import * as ui from '../ui.js';
 import { state, updateState } from '../state.js';
-
 let auditFiltersPopulated = false;
-
 function renderAuditLogs(logs, userRole) {
     DOMElements.auditLogTableBody.innerHTML = '';
     if (!logs || logs.length === 0) {
@@ -29,7 +27,6 @@ function renderAuditLogs(logs, userRole) {
         DOMElements.auditLogTableBody.appendChild(row);
     });
 }
-
 async function fetchAuditLogs() {
     try {
         const params = new URLSearchParams({ page: state.currentAuditPage, limit: 15 });
@@ -38,7 +35,6 @@ async function fetchAuditLogs() {
         if (DOMElements.auditStartDate.value) params.append('startDate', DOMElements.auditStartDate.value);
         if (DOMElements.auditEndDate.value) params.append('endDate', DOMElements.auditEndDate.value);
         if (DOMElements.auditSearchInput.value) params.append('search', DOMElements.auditSearchInput.value);
-
         const data = await api.getAuditLogs(params);
         renderAuditLogs(data.logs, state.userRole);
         const paginationContainer = document.querySelector('#audit-pagination-container .pagination-wrapper');
@@ -50,7 +46,6 @@ async function fetchAuditLogs() {
         ui.showAlert('error', 'Ошибка!', error.message);
     }
 }
-
 async function populateAuditFilters() {
     if (auditFiltersPopulated) return;
     try {
@@ -74,7 +69,6 @@ async function populateAuditFilters() {
         console.error(error.message);
     }
 }
-
 async function deleteLogEntry(e) {
     if (!e.target.classList.contains('btn-delete-log')) return;
     const logId = e.target.closest('tr')?.dataset.logId;
@@ -89,7 +83,6 @@ async function deleteLogEntry(e) {
         }
     }
 }
-
 async function clearLogs() {
     const { value: formValues } = await Swal.fire({
         title: 'Очистка логов',
@@ -111,7 +104,6 @@ async function clearLogs() {
             return { endDate, password };
         }
     });
-
     if (formValues) {
         try {
             Swal.fire({ title: 'Очистка...', didOpen: () => Swal.showLoading() });
@@ -125,13 +117,10 @@ async function clearLogs() {
         }
     }
 }
-
 export function initializeAudit() {
     DOMElements.auditLogBtn.addEventListener('click', () => {
         const isHidden = DOMElements.auditLogModal.classList.contains('hidden');
-
         DOMElements.sessionsManagerModal.classList.add('hidden');
-
         if (isHidden) {
             updateState({ currentAuditPage: 1 });
             DOMElements.auditLogModal.classList.remove('hidden');
@@ -141,14 +130,11 @@ export function initializeAudit() {
             DOMElements.auditLogModal.classList.add('hidden');
         }
     });
-
     DOMElements.auditLogCloseBtn.addEventListener('click', () => DOMElements.auditLogModal.classList.add('hidden'));
-
     DOMElements.auditApplyFiltersBtn.addEventListener('click', () => {
         updateState({ currentAuditPage: 1 });
         fetchAuditLogs();
     });
-    
     DOMElements.auditResetFiltersBtn.addEventListener('click', () => {
         DOMElements.auditAdminFilter.value = '';
         DOMElements.auditActionFilter.value = '';
@@ -158,8 +144,6 @@ export function initializeAudit() {
         updateState({ currentAuditPage: 1 });
         fetchAuditLogs();
     });
-
     DOMElements.auditLogTableBody.addEventListener('click', deleteLogEntry);
-    
     DOMElements.clearAuditLogBtn.addEventListener('click', clearLogs);
 }

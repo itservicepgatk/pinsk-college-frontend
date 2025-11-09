@@ -1,9 +1,7 @@
-
 export const showSuccess = (title, text = '') => Swal.fire({ icon: 'success', title, text, showConfirmButton: false, timer: 1500 });
 export const showError = (title, text = '') => Swal.fire({ icon: 'error', title, text });
 export const showInfo = (title, text = '') => Swal.fire({ icon: 'info', title, text });
 export const showWarning = (title, text = '') => Swal.fire({ icon: 'warning', title, text });
-
 export const showConfirm = (title, text, confirmButtonText = 'Да, удалить!') => {
     return Swal.fire({
         title,
@@ -16,7 +14,6 @@ export const showConfirm = (title, text, confirmButtonText = 'Да, удалит
         cancelButtonText: 'Отмена'
     });
 };
-
 export const showLoading = (title = 'Загрузка...', text = 'Пожалуйста, подождите.') => {
     Swal.fire({
         title,
@@ -25,5 +22,4 @@ export const showLoading = (title = 'Загрузка...', text = 'Пожалу�
         allowOutsideClick: false
     });
 };
-
 export const closeLoading = () => Swal.close();

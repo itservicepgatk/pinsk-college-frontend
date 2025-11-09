@@ -4,7 +4,6 @@ import * as ui from '../ui.js';
 import { state, updateState } from '../state.js';
 import { fetchLearners, populateGroupFilter } from './learners.js';
 import { initializeDashboard } from './dashboard.js';
-
 async function deleteGroup(groupName, learnerCount) {
     const { value: confirmedGroupName } = await Swal.fire({
         title: `Удаление группы ${groupName}`,
@@ -17,7 +16,6 @@ async function deleteGroup(groupName, learnerCount) {
         cancelButtonText: 'Отмена',
         inputValidator: (value) => (value !== groupName) ? 'Введенный номер группы не совпадает!' : null,
     });
-
     if (confirmedGroupName) {
         try {
             const resData = await api.deleteGroup(groupName);
@@ -29,7 +27,6 @@ async function deleteGroup(groupName, learnerCount) {
         }
     }
 }
-
 async function fetchAndRenderGroups() {
     try {
         const groupsData = await api.getGroups();
@@ -70,7 +67,6 @@ async function fetchAndRenderGroups() {
         ui.showAlert('error', 'Ошибка!', error.message);
     }
 }
-
 export function initializeGroups() {
     fetchAndRenderGroups();
 }

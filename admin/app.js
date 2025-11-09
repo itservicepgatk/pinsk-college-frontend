@@ -13,12 +13,10 @@ import { initializeSettings } from './modules/settings.js';
 import { initializeGroupEditor } from './modules/groupEditor.js';
 import { initializeSessions } from './modules/sessions.js';
 import { initializeDebtors } from './modules/debtors.js';
-
 export function initializeApp() {
     showView('dashboard-container');
     toggleSuperAdminFeatures(state.userRole);
     resetInactivityTimer();
-
     initializeDashboard();
     initializeGroups();
     initializeLearners();
@@ -31,7 +29,6 @@ export function initializeApp() {
     initializeSessions();
     initializeDebtors();
 }
-
 document.addEventListener('DOMContentLoaded', async () => {
     try {
         const response = await fetch(`${API_URL}/api/settings/maintenance`);
@@ -45,7 +42,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     } catch (e) {
         console.error("Не удалось проверить статус режима тестирования");
     }
-
     initializeAuth();
     if (state.token) {
         initializeApp();

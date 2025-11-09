@@ -4,9 +4,7 @@ import * as ui from './ui.js';
 import { updateState } from './state.js';
 import { INACTIVITY_TIMEOUT } from './config.js';
 import { initializeApp } from './app.js';
-
 let inactivityTimer;
-
 function handleMaintenanceBanner(enabled) {
     const banner = document.getElementById('maintenance-banner');
     if (banner) {
@@ -14,7 +12,6 @@ function handleMaintenanceBanner(enabled) {
         document.body.classList.toggle('maintenance-active', enabled);
     }
 }
-
 function handleInactivity() {
     if (localStorage.getItem('adminToken')) {
         Swal.fire({
@@ -25,19 +22,16 @@ function handleInactivity() {
         }).then(() => logout('Сессия истекла по неактивности'));
     }
 }
-
 export function resetInactivityTimer() {
     clearTimeout(inactivityTimer);
     inactivityTimer = setTimeout(handleInactivity, INACTIVITY_TIMEOUT);
 }
-
 async function handleLogin(event) {
     event.preventDefault();
     DOMElements.adminErrorMessage.textContent = '';
     DOMElements.adminLoader.classList.remove('hidden');
     const login = DOMElements.adminLoginForm.elements['admin-login'].value;
     const password = DOMElements.adminLoginForm.elements['admin-password'].value;
-
     try {
         const response = await api.adminLogin(login, password);
         if (!response.ok) {
@@ -57,10 +51,8 @@ async function handleLogin(event) {
         DOMElements.adminLoader.classList.add('hidden');
     }
 }
-
 async function logout(reason = 'Ручной выход') {
     clearTimeout(inactivityTimer);
-    
     try {
         if (localStorage.getItem('adminToken')) {
             await api.logLogout({ reason });
@@ -68,14 +60,12 @@ async function logout(reason = 'Ручной выход') {
     } catch (error) {
         console.error('Не удалось записать лог о выходе:', error);
     }
-    
     updateState({ token: null, userRole: null });
     localStorage.removeItem('adminToken');
     localStorage.removeItem('adminRole');
     ui.toggleSuperAdminFeatures(null);
     window.location.href = 'index.html';
 }
-
 export function initializeAuth() {
     if (DOMElements.adminLoginForm) {
         DOMElements.adminLoginForm.addEventListener('submit', handleLogin);

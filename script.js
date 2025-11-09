@@ -1,5 +1,4 @@
 const API_URL = 'https:
-
 const appWrapper = document.getElementById('app-wrapper');
 const loginViewContainer = document.getElementById('login-view-container');
 const learnerInfoContainer = document.getElementById('learner-info-container');
@@ -24,41 +23,33 @@ const nextPageBtn = document.getElementById('next-page');
 const pageNumSpan = document.getElementById('page-num');
 const pageCountSpan = document.getElementById('page-count');
 let heartbeatInterval = null;
-
 pdfjsLib.GlobalWorkerOptions.workerSrc = `https:
 let pdfDoc = null;
 let pageNum = 1;
-
 tabsContainer.addEventListener('click', (e) => {
     e.preventDefault();
     const targetTab = e.target.closest('.tab');
     if (!targetTab) return;
-
     tabsContainer.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
     document.querySelectorAll('.login-form').forEach(form => form.classList.remove('active'));
-
     targetTab.classList.add('active');
     const formToShow = document.getElementById(targetTab.dataset.form === 'learner' ? 'login-form' : 'admin-login-form');
     if (formToShow) {
         formToShow.classList.add('active');
     }
 });
-
 async function handleLearnerLogin(event) {
     event.preventDefault();
     const login = learnerForm.elements.login.value;
     const password = learnerForm.elements.password.value;
-
     learnerErrorMessage.textContent = '';
     slowConnectionMessage.classList.add('hidden');
     learnerLoader.classList.remove('hidden');
     learnerForm.querySelector('button').disabled = true;
-
     const slowConnectionTimer = setTimeout(() => {
         slowConnectionMessage.textContent = 'Плохое соединение с интернетом, подождите пожалуйста...';
         slowConnectionMessage.classList.remove('hidden');
     }, 3000);
-
     try {
         const response = await fetch(`${API_URL}/login`, {
             method: 'POST',
@@ -87,16 +78,13 @@ async function handleLearnerLogin(event) {
         learnerForm.querySelector('button').disabled = false;
     }
 }
-
 adminForm.addEventListener('submit', async (event) => {
     event.preventDefault();
     const login = adminForm.elements['admin-login'].value;
     const password = adminForm.elements['admin-password'].value;
-
     adminErrorMessage.textContent = '';
     adminLoader.classList.remove('hidden');
     adminForm.querySelector('button').disabled = true;
-
     try {
         const response = await fetch(`${API_URL}/admin/login`, {
             method: 'POST',
@@ -123,7 +111,6 @@ adminForm.addEventListener('submit', async (event) => {
         adminForm.querySelector('button').disabled = false;
     }
 });
-
 function handleMaintenanceBanner(enabled) {
     if (enabled) {
         maintenanceBanner.classList.add('visible');
@@ -133,12 +120,10 @@ function handleMaintenanceBanner(enabled) {
         document.body.classList.remove('maintenance-active');
     }
 }
-
 function displayLearnerInfo(data) {
     loginViewContainer.classList.add('hidden');
     learnerInfoContainer.classList.remove('hidden');
     appWrapper.style.justifyContent = 'flex-start';
-
     personalDataContent.innerHTML = `
         <div class="info-row"><span class="info-label">ФИО:</span><span class="info-value">${data.fullName}</span></div>
         <div class="info-row"><span class="info-label">Курс:</span><span class="info-value">${data.course}</span></div>
@@ -153,7 +138,6 @@ function displayLearnerInfo(data) {
             </span>
         </div>
     `;
-
     materialsList.innerHTML = '';
     if (data.materials && data.materials.length > 0) {
         data.materials.forEach(material => {
@@ -170,7 +154,6 @@ function displayLearnerInfo(data) {
     } else {
         materialsList.innerHTML = '<p>Для вашей группы учебные материалы еще не загружены.</p>';
     }
-
     clearInterval(heartbeatInterval);
     heartbeatInterval = setInterval(async () => {
         const token = localStorage.getItem('learnerToken');
@@ -190,11 +173,9 @@ function displayLearnerInfo(data) {
         }
     }, 30000);
 }
-
 async function handleLogout() {
     clearInterval(heartbeatInterval);
     const token = localStorage.getItem('learnerToken');
-
     if (token) {
         try {
             await fetch(`${API_URL}/api/learners/logout`, {
@@ -207,14 +188,12 @@ async function handleLogout() {
             console.error('Не удалось записать лог о выходе:', error);
         }
     }
-
     localStorage.removeItem('learnerToken');
     learnerInfoContainer.classList.add('hidden');
     loginViewContainer.classList.remove('hidden');
     appWrapper.style.justifyContent = 'center';
     learnerForm.reset();
 }
-
 function renderPage(num) {
     pdfDoc.getPage(num).then(function(page) {
         const viewport = page.getViewport({
@@ -230,25 +209,21 @@ function renderPage(num) {
     });
     pageNumSpan.textContent = num;
 }
-
 function onPrevPage() {
     if (pageNum <= 1) return;
     pageNum--;
     renderPage(pageNum);
 }
-
 function onNextPage() {
     if (pageNum >= pdfDoc.numPages) return;
     pageNum++;
     renderPage(pageNum);
 }
-
 prevPageBtn.addEventListener('click', onPrevPage);
 nextPageBtn.addEventListener('click', onNextPage);
 pdfCloseBtn.addEventListener('click', () => {
     pdfModal.classList.add('hidden');
 });
-
 async function openPdfViewer(path, name) {
     pdfTitle.textContent = 'Загрузка...';
     pdfModal.classList.remove('hidden');
@@ -286,13 +261,11 @@ async function openPdfViewer(path, name) {
         pdfModal.classList.add('hidden');
     }
 }
-
 document.addEventListener('contextmenu', (event) => {
     if (!learnerInfoContainer.classList.contains('hidden')) {
         event.preventDefault();
     }
 });
-
 window.addEventListener('keydown', function(event) {
     if (learnerInfoContainer.classList.contains('hidden')) return;
     if (event.ctrlKey || event.metaKey) {
@@ -300,7 +273,6 @@ window.addEventListener('keydown', function(event) {
         if (key === 'c' || key === 'p' || key === 's') event.preventDefault();
     }
 });
-
 document.addEventListener('DOMContentLoaded', async () => {
     try {
         const res = await fetch(`${API_URL}/api/settings/maintenance`);
@@ -312,7 +284,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         console.error("Не удалось проверить статус режима тестирования");
     }
 });
-
 window.addEventListener('beforeunload', () => {
     const token = localStorage.getItem('learnerToken');
     if (token) {
@@ -321,10 +292,8 @@ window.addEventListener('beforeunload', () => {
         }));
     }
 });
-
 learnerForm.addEventListener('submit', handleLearnerLogin);
 logoutButton.addEventListener('click', handleLogout);
-
 document.querySelectorAll('.password-toggle-icon').forEach(icon => {
     icon.addEventListener('click', () => {
         const passwordInput = icon.previousElementSibling;

@@ -1,24 +1,20 @@
 import { DOMElements } from './dom.js';
-
 export function showView(viewId) {
     DOMElements.adminLoginContainer.classList.add('hidden');
     DOMElements.dashboardContainer.classList.add('hidden');
     document.getElementById(viewId).classList.remove('hidden');
     document.body.classList.toggle('login-view', viewId === 'admin-login-view-container');
 }
-
 export function showGroupsView() {
     DOMElements.dashboardTitle.textContent = 'Группы';
     DOMElements.learnersView.classList.add('hidden');
     DOMElements.groupsView.classList.remove('hidden');
 }
-
 export function showLearnersView(groupName) {
     DOMElements.dashboardTitle.textContent = groupName === 'Все' ? 'Все учащиеся' : `Учащиеся группы №${groupName}`;
     DOMElements.groupsView.classList.add('hidden');
     DOMElements.learnersView.classList.remove('hidden');
 }
-
 export function renderPagination(totalPages, currentPage, container, onPageClick) {
     container.innerHTML = '';
     for (let i = 1; i <= totalPages; i++) {
@@ -31,7 +27,6 @@ export function renderPagination(totalPages, currentPage, container, onPageClick
         container.appendChild(button);
     }
 }
-
 export function updateSortIndicators(currentSort) {
     document.querySelectorAll('#table-head th[data-sort-by]').forEach(th => {
         th.classList.remove('asc', 'desc');
@@ -40,11 +35,9 @@ export function updateSortIndicators(currentSort) {
         }
     });
 }
-
 export function showAlert(type, title, text) {
     Swal.fire({ icon: type, title, text });
 }
-
 export async function showConfirm(title, text, confirmButtonText = 'Да, удалить!') {
     const result = await Swal.fire({
         title,
@@ -58,7 +51,6 @@ export async function showConfirm(title, text, confirmButtonText = 'Да, уда
     });
     return result.isConfirmed;
 }
-
 export function toggleSuperAdminFeatures(userRole) {
     const superAdminElements = document.querySelectorAll('.super-admin-feature');
     const isSuperAdmin = userRole === 'superadmin';

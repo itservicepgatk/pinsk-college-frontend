@@ -2,13 +2,10 @@ import { DOMElements } from '../dom.js';
 import * as api from '../api.js';
 import * as ui from '../ui.js';
 import { initializeDashboard } from './dashboard.js';
-
 async function handleRemoveDebt(e) {
     if (!e.target.classList.contains('btn-remove-debt')) return;
-    
     const learnerId = e.target.dataset.learnerId;
     if (!learnerId) return;
-
     if (await ui.showConfirm('Убрать задолженность?', 'Это действие установит поле "Академические задолженности" пустым.', 'Да, убрать')) {
         try {
             await api.updateLearner(learnerId, { academicDebts: '' });
@@ -20,7 +17,6 @@ async function handleRemoveDebt(e) {
         }
     }
 }
-
 async function fetchAndRenderDebtors() {
     DOMElements.debtorsTableBody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Загрузка...</td></tr>';
     try {
@@ -30,7 +26,6 @@ async function fetchAndRenderDebtors() {
             DOMElements.debtorsTableBody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Нет учащихся с задолженностями.</td></tr>';
             return;
         }
-
         debtors.forEach(debtor => {
             const row = document.createElement('tr');
             row.innerHTML = `
@@ -48,16 +43,13 @@ async function fetchAndRenderDebtors() {
         DOMElements.debtorsTableBody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: red;">${error.message}</td></tr>`;
     }
 }
-
 export function initializeDebtors() {
     DOMElements.detailsDebtorsBtn.addEventListener('click', () => {
         DOMElements.debtorsModal.classList.remove('hidden');
         fetchAndRenderDebtors();
     });
-
     DOMElements.debtorsModalCloseBtn.addEventListener('click', () => {
         DOMElements.debtorsModal.classList.add('hidden');
     });
-
     DOMElements.debtorsTableBody.addEventListener('click', handleRemoveDebt);
 }

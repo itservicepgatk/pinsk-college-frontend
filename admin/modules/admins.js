@@ -2,7 +2,6 @@ import { DOMElements } from '../dom.js';
 import * as api from '../api.js';
 import * as ui from '../ui.js';
 import { state } from '../state.js';
-
 async function fetchAndRenderAdmins() {
     try {
         const admins = await api.getAdmins();
@@ -25,7 +24,6 @@ async function fetchAndRenderAdmins() {
         ui.showAlert('error', 'Ошибка!', error.message);
     }
 }
-
 async function handleAddAdmin(e) {
     e.preventDefault();
     const login = DOMElements.addAdminForm.elements['new-admin-login'].value;
@@ -39,12 +37,10 @@ async function handleAddAdmin(e) {
         ui.showAlert('error', 'Ошибка!', error.message);
     }
 }
-
 async function handleDeleteAdmin(e) {
     if (!e.target.classList.contains('btn-delete-admin')) return;
     const adminId = e.target.closest('tr')?.dataset.adminId;
     if (!adminId) return;
-
     if (await ui.showConfirm('Вы уверены?', 'Удалить этого администратора?')) {
         try {
             const data = await api.deleteAdmin(adminId);
@@ -55,7 +51,6 @@ async function handleDeleteAdmin(e) {
         }
     }
 }
-
 export function initializeAdmins() {
     if (!DOMElements.manageAdminsBtn) return;
     DOMElements.manageAdminsBtn.addEventListener('click', () => {
