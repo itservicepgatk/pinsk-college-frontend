@@ -1,13 +1,121 @@
-import{DOMElements}from'../dom.js';import*as api from'../api.js';import*as ui from'../ui.js';import{state,updateState}from'../state.js';import{initializeDashboard}from'./dashboard.js';let searchTimer;function generateRandomPassword(){return Math.random().toString(36).slice(-8);}
-function openLearnerModal(mode,learnerId=null){DOMElements.learnerForm.reset();DOMElements.learnerForm.querySelector('#learner-id').value='';if(mode==='add'){DOMElements.modalTitle.textContent='Добавить учащегося';DOMElements.learnerForm.querySelector('label[for="password"]').textContent='Пароль:';}else if(mode==='edit'&&learnerId){DOMElements.modalTitle.textContent='Редактировать учащегося';DOMElements.learnerForm.querySelector('label[for="password"]').textContent='Новый пароль (оставьте пустым, чтобы не менять):';const learner=state.learners.find(s=>Number(s.id)===Number(learnerId));if(learner){DOMElements.learnerForm.elements['learner-id'].value=learner.id;DOMElements.learnerForm.elements['fullName'].value=learner.full_name;DOMElements.learnerForm.elements['login'].value=learner.login;DOMElements.learnerForm.elements['group_name'].value=learner.group_name;DOMElements.learnerForm.elements['course'].value=learner.course;DOMElements.learnerForm.elements['specialty'].value=learner.specialty||'';DOMElements.learnerForm.elements['enrollmentDate'].value=learner.enrollment_date||'';DOMElements.learnerForm.elements['sessionSchedule'].value=learner.session_schedule||'';DOMElements.learnerForm.elements['academicDebts'].value=learner.academic_debts||'';}else{return ui.showAlert('error','Ошибка!','Не удалось найти данные учащегося.');}}
-DOMElements.modal.classList.remove('hidden');}
-function closeLearnerModal(){DOMElements.modal.classList.add('hidden');}
-async function handleLearnerFormSubmit(e){e.preventDefault();const id=DOMElements.learnerForm.elements['learner-id'].value;const isEditing=!!id;const learnerData={fullName:DOMElements.learnerForm.elements['fullName'].value,login:DOMElements.learnerForm.elements['login'].value,password:DOMElements.learnerForm.elements['password'].value,group_name:DOMElements.learnerForm.elements['group_name'].value,course:DOMElements.learnerForm.elements['course'].value,specialty:DOMElements.learnerForm.elements['specialty'].value,enrollmentDate:DOMElements.learnerForm.elements['enrollmentDate'].value,sessionSchedule:DOMElements.learnerForm.elements['sessionSchedule'].value,academicDebts:DOMElements.learnerForm.elements['academicDebts'].value};if(!learnerData.password){delete learnerData.password;}
-try{const updatedLearner=isEditing?await api.updateLearner(id,learnerData):await api.createLearner(learnerData);closeLearnerModal();ui.showAlert('success','Сохранено!','Данные учащегося успешно обновлены.');initializeDashboard();fetchLearners();}catch(error){ui.showAlert('error','Ошибка!',error.message);}}
-async function handleFileImport(event){const file=event.target.files[0];if(!file)return;const reader=new FileReader();reader.onload=async(e)=>{const text=e.target.result;const lines=text.split(/\r?\n/).filter(line=>line.trim()!=='');if(lines.length<2){return ui.showAlert('error','Ошибка','Файл пуст или имеет неверный формат.');}
-const headers=lines[0].split(',').map(h=>h.trim());const learners=lines.slice(1).map(line=>{const values=line.split(',');const learner={};headers.forEach((header,index)=>{learner[header]=values[index]?values[index].trim():'';});return learner;});if(await ui.showConfirm(`Подтверждение импорта`,`Найдено<b>${learners.length}</b>учащихся.Продолжить?`,'Да, импортировать')){try{const data=await api.importLearners(learners);ui.showAlert('success','Успех!',data.message);fetchLearners();initializeDashboard();}catch(error){ui.showAlert('error','Ошибка импорта!',error.message);}}};reader.readAsText(file);DOMElements.csvFileInput.value='';}
-async function exportLearnersToCSV(){try{const learners=await api.exportLearners();if(learners.length===0){return ui.showAlert('info','Информация','Нет данных для экспорта.');}
-const headers=Object.keys(learners[0]);const csvRows=[headers.join(',')];learners.forEach(learner=>{const values=headers.map(header=>`"${(learner[header] || '').toString().replace(/"/g,'""')}"`);
+import {
+    DOMElements
+} from '../dom.js';
+import * as api from '../api.js';
+import * as ui from '../ui.js';
+import {
+    state,
+    updateState
+} from '../state.js';
+import {
+    initializeDashboard
+} from './dashboard.js';
+let searchTimer;
+function generateRandomPassword() {
+    return Math.random().toString(36).slice(-8);
+}
+function openLearnerModal(mode, learnerId = null) {
+    DOMElements.learnerForm.reset();
+    DOMElements.learnerForm.querySelector('#learner-id').value = '';
+    if (mode === 'add') {
+        DOMElements.modalTitle.textContent = 'Добавить учащегося';
+        DOMElements.learnerForm.querySelector('label[for="password"]').textContent = 'Пароль:';
+    } else if (mode === 'edit' && learnerId) {
+        DOMElements.modalTitle.textContent = 'Редактировать учащегося';
+        DOMElements.learnerForm.querySelector('label[for="password"]').textContent = 'Новый пароль (оставьте пустым, чтобы не менять):';
+        const learner = state.learners.find(s => Number(s.id) === Number(learnerId));
+        if (learner) {
+            DOMElements.learnerForm.elements['learner-id'].value = learner.id;
+            DOMElements.learnerForm.elements['fullName'].value = learner.full_name;
+            DOMElements.learnerForm.elements['login'].value = learner.login;
+            DOMElements.learnerForm.elements['group_name'].value = learner.group_name;
+            DOMElements.learnerForm.elements['course'].value = learner.course;
+            DOMElements.learnerForm.elements['specialty'].value = learner.specialty || '';
+            DOMElements.learnerForm.elements['enrollmentDate'].value = learner.enrollment_date || '';
+            DOMElements.learnerForm.elements['sessionSchedule'].value = learner.session_schedule || '';
+            DOMElements.learnerForm.elements['academicDebts'].value = learner.academic_debts || '';
+        } else {
+            return ui.showAlert('error', 'Ошибка!', 'Не удалось найти данные учащегося.');
+        }
+    }
+    DOMElements.modal.classList.remove('hidden');
+}
+function closeLearnerModal() {
+    DOMElements.modal.classList.add('hidden');
+}
+async function handleLearnerFormSubmit(e) {
+    e.preventDefault();
+    const id = DOMElements.learnerForm.elements['learner-id'].value;
+    const isEditing = !!id;
+    const learnerData = {
+        fullName: DOMElements.learnerForm.elements['fullName'].value,
+        login: DOMElements.learnerForm.elements['login'].value,
+        password: DOMElements.learnerForm.elements['password'].value,
+        group_name: DOMElements.learnerForm.elements['group_name'].value,
+        course: DOMElements.learnerForm.elements['course'].value,
+        specialty: DOMElements.learnerForm.elements['specialty'].value,
+        enrollmentDate: DOMElements.learnerForm.elements['enrollmentDate'].value,
+        sessionSchedule: DOMElements.learnerForm.elements['sessionSchedule'].value,
+        academicDebts: DOMElements.learnerForm.elements['academicDebts'].value
+    };
+    if (!learnerData.password) {
+        delete learnerData.password;
+    }
+    try {
+        const updatedLearner = isEditing ?
+            await api.updateLearner(id, learnerData) :
+            await api.createLearner(learnerData);
+        closeLearnerModal();
+        ui.showAlert('success', 'Сохранено!', 'Данные учащегося успешно обновлены.');
+        initializeDashboard();
+        fetchLearners();
+    } catch (error) {
+        ui.showAlert('error', 'Ошибка!', error.message);
+    }
+}
+async function handleFileImport(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+        const text = e.target.result;
+        const lines = text.split(/\r?\n/).filter(line => line.trim() !== '');
+        if (lines.length < 2) {
+            return ui.showAlert('error', 'Ошибка', 'Файл пуст или имеет неверный формат.');
+        }
+        const headers = lines[0].split(',').map(h => h.trim());
+        const learners = lines.slice(1).map(line => {
+            const values = line.split(',');
+            const learner = {};
+            headers.forEach((header, index) => {
+                learner[header] = values[index] ? values[index].trim() : '';
+            });
+            return learner;
+        });
+        if (await ui.showConfirm(`Подтверждение импорта`, `Найдено <b>${learners.length}</b> учащихся. Продолжить?`, 'Да, импортировать')) {
+            try {
+                const data = await api.importLearners(learners);
+                ui.showAlert('success', 'Успех!', data.message);
+                fetchLearners();
+                initializeDashboard();
+            } catch (error) {
+                ui.showAlert('error', 'Ошибка импорта!', error.message);
+            }
+        }
+    };
+    reader.readAsText(file);
+    DOMElements.csvFileInput.value = '';
+}
+async function exportLearnersToCSV() {
+    try {
+        const learners = await api.exportLearners();
+        if (learners.length === 0) {
+            return ui.showAlert('info', 'Информация', 'Нет данных для экспорта.');
+        }
+        const headers = Object.keys(learners[0]);
+        const csvRows = [headers.join(',')];
+        learners.forEach(learner => {
+            const values = headers.map(header => `"${(learner[header] || '').toString().replace(/"/g, '""')}"`);
             csvRows.push(values.join(','));
         });
         const blob = new Blob([`\uFEFF${csvRows.join('\n')}`], {
@@ -175,7 +283,7 @@ export function initializeLearners() {
             title: 'Инструкция по импорту',
             icon: 'info',
             html: `
-                <div style="text-align:left;padding:10px;">
+                <div style="text-align: left; padding: 10px;">
                     <h4>Шаг 1: Подготовка файла</h4>
                     <p>Для импорта требуется файл формата <strong>.csv</strong> с разделителем-запятой и в кодировке <strong>UTF-8</strong> (это важно для корректного отображения русских имен).</p>
                     <h4>Шаг 2: Структура файла</h4>
@@ -189,10 +297,85 @@ export function initializeLearners() {
                         <li><strong>specialty</strong> - Специальность (необязательно)</li>
                     </ul>
                     <h4>Шаг 3: Пример содержимого файла</h4>
-                    <pre style="background-color:#f5f5f5;border-radius:4px;padding:10px;font-size:12px;text-align:left;"><code>fullName,login,password,group_name,course,specialty
+                    <pre style="background-color: #f5f5f5; border-radius: 4px; padding: 10px; font-size: 12px; text-align: left;"><code>fullName,login,password,group_name,course,specialty
 "Иванов Иван Иванович",ivanov,pass123,117,1,"Программное обеспечение"
 "Петрова Мария Сергеевна",petrova,qwerty,258,2,"Бухгалтерский учет"</code></pre>
                     <h4>Рекомендуемые программы</h4>
                      <ul>
                         <li><strong>Google Sheets (Рекомендуется):</strong> Просто создайте таблицу и выберите "Файл" -> "Скачать" -> "Файл CSV". Кодировка будет правильной.</li>
-                        <li><strong>Microsoft Excel:</strong> При сохранении выберите "Файл" -> "Сохранить как" и в поле "Тип файла" укажите <strong>"CSV UTF-8(разделители-запятые)"
+                        <li><strong>Microsoft Excel:</strong> При сохранении выберите "Файл" -> "Сохранить как" и в поле "Тип файла" укажите <strong>"CSV UTF-8 (разделители - запятые)"</strong>.</li>
+                    </ul>
+                </div>
+            `,
+            confirmButtonText: 'Понятно',
+        });
+    });
+    DOMElements.allLearnersBtn.addEventListener('click', () => {
+        updateState({
+            currentSearchName: '',
+            currentSort: {
+                key: 'full_name',
+                direction: 'asc'
+            },
+            currentPage: 1,
+            currentGroupName: null
+        });
+        DOMElements.searchInput.value = '';
+        DOMElements.groupFilterSelect.value = '';
+        ui.showLearnersView('Все');
+        populateGroupFilter();
+        fetchLearners();
+    });
+    DOMElements.backToGroupsBtn.addEventListener('click', () => {
+        updateState({
+            currentGroupName: null
+        });
+        ui.showGroupsView();
+    });
+    DOMElements.tableHead.addEventListener('click', (e) => {
+        const th = e.target.closest('th');
+        if (!th || !th.dataset.sortBy) return;
+        const sortKey = th.dataset.sortBy;
+        let direction = 'asc';
+        if (state.currentSort.key === sortKey) {
+            direction = state.currentSort.direction === 'asc' ? 'desc' : 'asc';
+        }
+        updateState({
+            currentSort: {
+                key: sortKey,
+                direction
+            },
+            currentPage: 1
+        });
+        fetchLearners();
+    });
+    DOMElements.searchInput.addEventListener('input', () => {
+        clearTimeout(searchTimer);
+        searchTimer = setTimeout(() => {
+            updateState({
+                currentSearchName: DOMElements.searchInput.value,
+                currentPage: 1
+            });
+            fetchLearners();
+        }, 300);
+    });
+    DOMElements.groupFilterSelect.addEventListener('change', () => {
+        updateState({
+            currentPage: 1,
+            currentGroupName: DOMElements.groupFilterSelect.value
+        });
+        fetchLearners();
+    });
+    DOMElements.selectAllCheckbox.addEventListener('change', (e) => {
+        document.querySelectorAll('.learner-checkbox').forEach(cb => cb.checked = e.target.checked);
+        updateDeleteSelectedButtonState();
+    });
+    DOMElements.learnersTableBody.addEventListener('change', (e) => {
+        if (e.target.classList.contains('learner-checkbox')) {
+            updateDeleteSelectedButtonState();
+            if (!e.target.checked) DOMElements.selectAllCheckbox.checked = false;
+        }
+    });
+    DOMElements.deleteSelectedBtn.addEventListener('click', deleteSelectedLearners);
+    DOMElements.learnersTableBody.addEventListener('click', handleLearnerAction);
+}

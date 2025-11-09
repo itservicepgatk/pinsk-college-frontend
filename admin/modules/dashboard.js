@@ -1,6 +1,66 @@
-import{DOMElements}from'../dom.js';import*as api from'../api.js';import*as ui from'../ui.js';async function fetchDashboardStats(){try{const stats=await api.getDashboardStats();DOMElements.totalLearnersStat.textContent=stats.totalLearners;DOMElements.debtorsCountStat.textContent=stats.debtorsCount;}catch(error){console.error(error.message);DOMElements.totalLearnersStat.textContent='—';DOMElements.debtorsCountStat.textContent='—';}}
-function createDebtorsList(debtors){if(!debtors||debtors.length===0){return'<span class="debtor-info-none">Нет</span>';}
-const listItems=debtors.map(d=>`<li><strong>${d.full_name}:</strong>${d.debt}</li>`).join('');return`<div class="debtor-info">${debtors.length}<button class="debtor-info-btn">?</button><ul class="debtor-tooltip hidden">${listItems}</ul></div>`;}
-async function openDetailsModal(){try{const groupsData=await api.getGroups();DOMElements.groupsStatsTableBody.innerHTML='';groupsData.forEach(group=>{const row=document.createElement('tr');const specialty=group.specialty?`<br><small style="color: #6c757d;">${group.specialty}</small>`:'';row.innerHTML=`<td><strong>${group.group_name}</strong>${specialty}</td><td>${group.total_learners}</td><td>${createDebtorsList(group.debtors_list)}</td>`;DOMElements.groupsStatsTableBody.appendChild(row);});DOMElements.detailsModal.classList.remove('hidden');}catch(error){ui.showAlert('error','Ошибка!',error.message);}}
-function handleDebtorTooltip(e){const btn=e.target.closest('.debtor-info-btn');if(!btn)return;const tooltip=btn.nextElementSibling;if(tooltip){tooltip.classList.toggle('hidden');}}
-export function initializeDashboard(){fetchDashboardStats();DOMElements.detailsBtn.addEventListener('click',openDetailsModal);DOMElements.detailsModalCloseBtn.addEventListener('click',()=>{DOMElements.detailsModal.classList.add('hidden');});DOMElements.groupsStatsTableBody.addEventListener('click',handleDebtorTooltip);}
+import { DOMElements } from '../dom.js';
+import * as api from '../api.js';
+import * as ui from '../ui.js';
+async function fetchDashboardStats() {
+    try {
+        const stats = await api.getDashboardStats();
+        DOMElements.totalLearnersStat.textContent = stats.totalLearners;
+        DOMElements.debtorsCountStat.textContent = stats.debtorsCount;
+    } catch (error) {
+        console.error(error.message);
+        DOMElements.totalLearnersStat.textContent = '—';
+        DOMElements.debtorsCountStat.textContent = '—';
+    }
+}
+function createDebtorsList(debtors) {
+    if (!debtors || debtors.length === 0) {
+        return '<span class="debtor-info-none">Нет</span>';
+    }
+    const listItems = debtors.map(d => `
+        <li>
+            <strong>${d.full_name}:</strong> ${d.debt}
+        </li>
+    `).join('');
+    return `
+        <div class="debtor-info">
+            ${debtors.length}
+            <button class="debtor-info-btn">?</button>
+            <ul class="debtor-tooltip hidden">${listItems}</ul>
+        </div>
+    `;
+}
+async function openDetailsModal() {
+    try {
+        const groupsData = await api.getGroups();
+        DOMElements.groupsStatsTableBody.innerHTML = '';
+        groupsData.forEach(group => {
+            const row = document.createElement('tr');
+            const specialty = group.specialty ? `<br><small style="color: #6c757d;">${group.specialty}</small>` : '';
+            row.innerHTML = `
+                <td><strong>${group.group_name}</strong>${specialty}</td>
+                <td>${group.total_learners}</td>
+                <td>${createDebtorsList(group.debtors_list)}</td>
+            `;
+            DOMElements.groupsStatsTableBody.appendChild(row);
+        });
+        DOMElements.detailsModal.classList.remove('hidden');
+    } catch (error) {
+        ui.showAlert('error', 'Ошибка!', error.message);
+    }
+}
+function handleDebtorTooltip(e) {
+    const btn = e.target.closest('.debtor-info-btn');
+    if (!btn) return;
+    const tooltip = btn.nextElementSibling;
+    if (tooltip) {
+        tooltip.classList.toggle('hidden');
+    }
+}
+export function initializeDashboard() {
+    fetchDashboardStats();
+    DOMElements.detailsBtn.addEventListener('click', openDetailsModal);
+    DOMElements.detailsModalCloseBtn.addEventListener('click', () => {
+        DOMElements.detailsModal.classList.add('hidden');
+    });
+    DOMElements.groupsStatsTableBody.addEventListener('click', handleDebtorTooltip);
+}

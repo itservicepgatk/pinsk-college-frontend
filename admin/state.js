@@ -1,1 +1,13 @@
-export const state={learners:[],token:localStorage.getItem('adminToken')||null,userRole:localStorage.getItem('adminRole')||null,currentPage:1,currentAuditPage:1,currentSort:{key:'full_name',direction:'asc'},currentSearchName:'',currentGroupName:null,};export function updateState(newState){Object.assign(state,newState);}
+export const state = {
+    learners: [],
+    token: localStorage.getItem('adminToken') || null,
+    userRole: localStorage.getItem('adminRole') || null,
+    currentPage: 1,
+    currentAuditPage: 1,
+    currentSort: { key: 'full_name', direction: 'asc' },
+    currentSearchName: '',
+    currentGroupName: null,
+};
+export function updateState(newState) {
+    Object.assign(state, newState);
+}

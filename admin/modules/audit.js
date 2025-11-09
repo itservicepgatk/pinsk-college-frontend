@@ -1,8 +1,149 @@
-import{DOMElements}from'../dom.js';import*as api from'../api.js';import*as ui from'../ui.js';import{state,updateState}from'../state.js';let auditFiltersPopulated=false;function renderAuditLogs(logs,userRole){DOMElements.auditLogTableBody.innerHTML='';if(!logs||logs.length===0){DOMElements.auditLogTableBody.innerHTML='<tr><td colspan="5" style="text-align: center;">Записи не найдены.</td></tr>';return;}
-logs.forEach(log=>{const row=document.createElement('tr');row.dataset.logId=log.id;const formattedTimestamp=new Date(log.timestamp).toLocaleString('ru-RU');const adminName=log.admin_login||'<span style="color: #888;">N/A</span>';const deleteButtonCell=userRole==='superadmin'?`<td><button class="btn-danger btn-delete-log"style="padding: 2px 8px;">&times;</button></td>`:'<td class="super-admin-feature"></td>';row.innerHTML=`<td>${formattedTimestamp}</td><td>${log.action_type}</td><td>${log.details}</td><td>${adminName}</td>${deleteButtonCell}`;DOMElements.auditLogTableBody.appendChild(row);});}
-async function fetchAuditLogs(){try{const params=new URLSearchParams({page:state.currentAuditPage,limit:15});if(DOMElements.auditAdminFilter.value)params.append('adminId',DOMElements.auditAdminFilter.value);if(DOMElements.auditActionFilter.value)params.append('actionType',DOMElements.auditActionFilter.value);if(DOMElements.auditStartDate.value)params.append('startDate',DOMElements.auditStartDate.value);if(DOMElements.auditEndDate.value)params.append('endDate',DOMElements.auditEndDate.value);if(DOMElements.auditSearchInput.value)params.append('search',DOMElements.auditSearchInput.value);const data=await api.getAuditLogs(params);renderAuditLogs(data.logs,state.userRole);const paginationContainer=document.querySelector('#audit-pagination-container .pagination-wrapper');ui.renderPagination(data.totalPages,data.currentPage,paginationContainer,(page)=>{updateState({currentAuditPage:page});fetchAuditLogs();});}catch(error){ui.showAlert('error','Ошибка!',error.message);}}
-async function populateAuditFilters(){if(auditFiltersPopulated)return;try{const[admins,actions]=await Promise.all([api.getAdmins(),api.getAuditActionTypes()]);DOMElements.auditAdminFilter.innerHTML='<option value="">Все</option>';admins.forEach(admin=>{const option=document.createElement('option');option.value=admin.id;option.textContent=admin.login;DOMElements.auditAdminFilter.appendChild(option);});DOMElements.auditActionFilter.innerHTML='<option value="">Все</option>';actions.forEach(action=>{const option=document.createElement('option');option.value=action;option.textContent=action;DOMElements.auditActionFilter.appendChild(option);});auditFiltersPopulated=true;}catch(error){console.error(error.message);}}
-async function deleteLogEntry(e){if(!e.target.classList.contains('btn-delete-log'))return;const logId=e.target.closest('tr')?.dataset.logId;if(!logId)return;if(await ui.showConfirm('Удалить эту запись?','Это действие нельзя будет отменить!')){try{const data=await api.deleteAuditLog(logId);ui.showAlert('success','Удалено!',data.message);fetchAuditLogs();}catch(error){ui.showAlert('error','Ошибка!',error.message);}}}
-async function clearLogs(){const{value:formValues}=await Swal.fire({title:'Очистка логов',html:`<p style="color: red; font-weight: bold;">Будут удалены все записи до указанной даты.</p><input type="date"id="swal-endDate"class="swal2-input"value="${new Date().toISOString().split('T')[0]}"><input type="password"id="swal-password"class="swal2-input"placeholder="Введите ваш пароль">`,focusConfirm:false,showCancelButton:true,confirmButtonText:'Очистить',confirmButtonColor:'#d33',cancelButtonText:'Отмена',preConfirm:()=>{const endDate=document.getElementById('swal-endDate').value;const password=document.getElementById('swal-password').value;if(!endDate||!password){Swal.showValidationMessage('Пожалуйста, заполните все поля');return false;}
-return{endDate,password};}});if(formValues){try{Swal.fire({title:'Очистка...',didOpen:()=>Swal.showLoading()});const data=await api.clearAuditLogs(formValues);Swal.close();ui.showAlert('success','Успех!',data.message);fetchAuditLogs();}catch(error){Swal.close();ui.showAlert('error','Ошибка!',error.message);}}}
-export function initializeAudit(){DOMElements.auditLogBtn.addEventListener('click',()=>{const isHidden=DOMElements.auditLogModal.classList.contains('hidden');DOMElements.sessionsManagerModal.classList.add('hidden');if(isHidden){updateState({currentAuditPage:1});DOMElements.auditLogModal.classList.remove('hidden');populateAuditFilters();fetchAuditLogs();}else{DOMElements.auditLogModal.classList.add('hidden');}});DOMElements.auditLogCloseBtn.addEventListener('click',()=>DOMElements.auditLogModal.classList.add('hidden'));DOMElements.auditApplyFiltersBtn.addEventListener('click',()=>{updateState({currentAuditPage:1});fetchAuditLogs();});DOMElements.auditResetFiltersBtn.addEventListener('click',()=>{DOMElements.auditAdminFilter.value='';DOMElements.auditActionFilter.value='';DOMElements.auditStartDate.value='';DOMElements.auditEndDate.value='';DOMElements.auditSearchInput.value='';updateState({currentAuditPage:1});fetchAuditLogs();});DOMElements.auditLogTableBody.addEventListener('click',deleteLogEntry);DOMElements.clearAuditLogBtn.addEventListener('click',clearLogs);}
+import { DOMElements } from '../dom.js';
+import * as api from '../api.js';
+import * as ui from '../ui.js';
+import { state, updateState } from '../state.js';
+let auditFiltersPopulated = false;
+function renderAuditLogs(logs, userRole) {
+    DOMElements.auditLogTableBody.innerHTML = '';
+    if (!logs || logs.length === 0) {
+        DOMElements.auditLogTableBody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Записи не найдены.</td></tr>';
+        return;
+    }
+    logs.forEach(log => {
+        const row = document.createElement('tr');
+        row.dataset.logId = log.id;
+        const formattedTimestamp = new Date(log.timestamp).toLocaleString('ru-RU');
+        const adminName = log.admin_login || '<span style="color: #888;">N/A</span>';
+        const deleteButtonCell = userRole === 'superadmin'
+            ? `<td><button class="btn-danger btn-delete-log" style="padding: 2px 8px;">&times;</button></td>`
+            : '<td class="super-admin-feature"></td>';
+        row.innerHTML = `
+            <td>${formattedTimestamp}</td>
+            <td>${log.action_type}</td>
+            <td>${log.details}</td>
+            <td>${adminName}</td>
+            ${deleteButtonCell}
+        `;
+        DOMElements.auditLogTableBody.appendChild(row);
+    });
+}
+async function fetchAuditLogs() {
+    try {
+        const params = new URLSearchParams({ page: state.currentAuditPage, limit: 15 });
+        if (DOMElements.auditAdminFilter.value) params.append('adminId', DOMElements.auditAdminFilter.value);
+        if (DOMElements.auditActionFilter.value) params.append('actionType', DOMElements.auditActionFilter.value);
+        if (DOMElements.auditStartDate.value) params.append('startDate', DOMElements.auditStartDate.value);
+        if (DOMElements.auditEndDate.value) params.append('endDate', DOMElements.auditEndDate.value);
+        if (DOMElements.auditSearchInput.value) params.append('search', DOMElements.auditSearchInput.value);
+        const data = await api.getAuditLogs(params);
+        renderAuditLogs(data.logs, state.userRole);
+        const paginationContainer = document.querySelector('#audit-pagination-container .pagination-wrapper');
+        ui.renderPagination(data.totalPages, data.currentPage, paginationContainer, (page) => {
+            updateState({ currentAuditPage: page });
+            fetchAuditLogs();
+        });
+    } catch (error) {
+        ui.showAlert('error', 'Ошибка!', error.message);
+    }
+}
+async function populateAuditFilters() {
+    if (auditFiltersPopulated) return;
+    try {
+        const [admins, actions] = await Promise.all([api.getAdmins(), api.getAuditActionTypes()]);
+        DOMElements.auditAdminFilter.innerHTML = '<option value="">Все</option>';
+        admins.forEach(admin => {
+            const option = document.createElement('option');
+            option.value = admin.id;
+            option.textContent = admin.login;
+            DOMElements.auditAdminFilter.appendChild(option);
+        });
+        DOMElements.auditActionFilter.innerHTML = '<option value="">Все</option>';
+        actions.forEach(action => {
+            const option = document.createElement('option');
+            option.value = action;
+            option.textContent = action;
+            DOMElements.auditActionFilter.appendChild(option);
+        });
+        auditFiltersPopulated = true;
+    } catch (error) {
+        console.error(error.message);
+    }
+}
+async function deleteLogEntry(e) {
+    if (!e.target.classList.contains('btn-delete-log')) return;
+    const logId = e.target.closest('tr')?.dataset.logId;
+    if (!logId) return;
+    if (await ui.showConfirm('Удалить эту запись?', 'Это действие нельзя будет отменить!')) {
+        try {
+            const data = await api.deleteAuditLog(logId);
+            ui.showAlert('success', 'Удалено!', data.message);
+            fetchAuditLogs();
+        } catch (error) {
+            ui.showAlert('error', 'Ошибка!', error.message);
+        }
+    }
+}
+async function clearLogs() {
+    const { value: formValues } = await Swal.fire({
+        title: 'Очистка логов',
+        html: `<p style="color: red; font-weight: bold;">Будут удалены все записи до указанной даты.</p>
+               <input type="date" id="swal-endDate" class="swal2-input" value="${new Date().toISOString().split('T')[0]}">
+               <input type="password" id="swal-password" class="swal2-input" placeholder="Введите ваш пароль">`,
+        focusConfirm: false,
+        showCancelButton: true,
+        confirmButtonText: 'Очистить',
+        confirmButtonColor: '#d33',
+        cancelButtonText: 'Отмена',
+        preConfirm: () => {
+            const endDate = document.getElementById('swal-endDate').value;
+            const password = document.getElementById('swal-password').value;
+            if (!endDate || !password) {
+                Swal.showValidationMessage('Пожалуйста, заполните все поля');
+                return false;
+            }
+            return { endDate, password };
+        }
+    });
+    if (formValues) {
+        try {
+            Swal.fire({ title: 'Очистка...', didOpen: () => Swal.showLoading() });
+            const data = await api.clearAuditLogs(formValues);
+            Swal.close();
+            ui.showAlert('success', 'Успех!', data.message);
+            fetchAuditLogs();
+        } catch (error) {
+            Swal.close();
+            ui.showAlert('error', 'Ошибка!', error.message);
+        }
+    }
+}
+export function initializeAudit() {
+    DOMElements.auditLogBtn.addEventListener('click', () => {
+        const isHidden = DOMElements.auditLogModal.classList.contains('hidden');
+        DOMElements.sessionsManagerModal.classList.add('hidden');
+        if (isHidden) {
+            updateState({ currentAuditPage: 1 });
+            DOMElements.auditLogModal.classList.remove('hidden');
+            populateAuditFilters();
+            fetchAuditLogs();
+        } else {
+            DOMElements.auditLogModal.classList.add('hidden');
+        }
+    });
+    DOMElements.auditLogCloseBtn.addEventListener('click', () => DOMElements.auditLogModal.classList.add('hidden'));
+    DOMElements.auditApplyFiltersBtn.addEventListener('click', () => {
+        updateState({ currentAuditPage: 1 });
+        fetchAuditLogs();
+    });
+    DOMElements.auditResetFiltersBtn.addEventListener('click', () => {
+        DOMElements.auditAdminFilter.value = '';
+        DOMElements.auditActionFilter.value = '';
+        DOMElements.auditStartDate.value = '';
+        DOMElements.auditEndDate.value = '';
+        DOMElements.auditSearchInput.value = '';
+        updateState({ currentAuditPage: 1 });
+        fetchAuditLogs();
+    });
+    DOMElements.auditLogTableBody.addEventListener('click', deleteLogEntry);
+    DOMElements.clearAuditLogBtn.addEventListener('click', clearLogs);
+}

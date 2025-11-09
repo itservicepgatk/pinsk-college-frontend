@@ -1,1 +1,98 @@
-<!doctype html><html lang=ru><meta charset=UTF-8><meta content="width=device-width,initial-scale=1.0" name=viewport><title>Портал колледжа</title><link href=assets/images/favicon.ico rel=icon type=image/x-icon><link href=style.css rel=stylesheet><script src=https://cdn.jsdelivr.net/npm/sweetalert2@11></script><script src=https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js></script><body><div id=maintenance-banner><strong>Внимание!</strong> На портале ведутся технические работы. Возможны временные ошибки и нестабильная работа.</div><div id=app-wrapper><div id=login-view-container><div class=avatar></div><h1 class=main-title>Портал колледжа</h1><p class=subtitle>Пожалуйста, войдите в свой аккаунт<div class=form-card><div class=tabs><a class="tab active" data-form=learner href=#>Учащийся</a><a class=tab data-form=admin href=#>Администратор</a></div><div id=login-forms-container><form class="login-form active" id=login-form><div class=form-group><label for=login>Логин</label><input id=login required></div><div class="form-group password-toggle-container"><label for=password>Пароль</label><input id=password required type=password><span class=password-toggle-icon></span></div><button>Войти</button><div class="loader hidden" id=loader></div><p class=error id=error-message><p class="info hidden" id=slow-connection-message></form><form class=login-form id=admin-login-form><div class=form-group><label for=admin-login>Логин</label><input id=admin-login required></div><div class="form-group password-toggle-container"><label for=admin-password>Пароль</label><input id=admin-password required type=password><span class=password-toggle-icon></span></div><button>Войти</button><div class="loader hidden" id=admin-loader></div><p class=error id=admin-error-message></form></div></div></div><div class=hidden id=learner-info-container><div class=dashboard-header><img alt="Логотип Колледжа" class=header-logo src=assets/images/logo.webp><h1>Личный кабинет учащегося</h1><button id=logout-button>Выйти</button></div><div class=dashboard-content><div class=panel id=personal-data-panel><h2>Личные данные</h2><div id=personal-data-content></div></div><div class=panel id=materials-panel><h2>Учебные материалы</h2><div id=materials-list></div></div></div></div></div><div class="modal-overlay hidden" id=pdf-modal><div class="modal-content wide"><div class=pdf-header><h3 id=pdf-title></h3><button id=pdf-close-btn>×</button></div><div id=pdf-viewer-container><canvas id=pdf-canvas></canvas></div><div class=pdf-controls><button id=prev-page>Предыдущая</button><span>Страница: <span id=page-num></span> / <span id=page-count></span></span><button id=next-page>Следующая</button></div></div></div><script defer src=script.js></script><div style="display: none;" id=save-blocker>Сохранение страницы отключено.</div>
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Портал колледжа</title>
+    <link rel="icon" type="image/x-icon" href="assets/images/favicon.ico">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+</head>
+<body>
+<div id="maintenance-banner">
+    <strong>Внимание!</strong> На портале ведутся технические работы. Возможны временные ошибки и нестабильная работа.
+</div>
+    <div id="app-wrapper">
+        <div id="login-view-container">
+            <div class="avatar"></div>
+            <h1 class="main-title">Портал колледжа</h1>
+            <p class="subtitle">Пожалуйста, войдите в свой аккаунт</p>
+            <div class="form-card">
+                <div class="tabs">
+                    <a href="#" class="tab active" data-form="learner">Учащийся</a>
+                    <a href="#" class="tab" data-form="admin">Администратор</a>
+                </div>
+                <div id="login-forms-container">
+                    <form id="login-form" class="login-form active">
+                        <div class="form-group">
+                            <label for="login">Логин</label>
+                            <input type="text" id="login" required>
+                        </div>
+                        <div class="form-group password-toggle-container">
+                            <label for="password">Пароль</label>
+                            <input type="password" id="password" required>
+                            <span class="password-toggle-icon"></span>
+                        </div>
+                        <button type="submit">Войти</button>
+                        <div id="loader" class="loader hidden"></div>
+                        <p id="error-message" class="error"></p>
+                        <p id="slow-connection-message" class="info hidden"></p>
+                    </form>
+                    <form id="admin-login-form" class="login-form">
+                        <div class="form-group">
+                            <label for="admin-login">Логин</label>
+                            <input type="text" id="admin-login" required>
+                        </div>
+                        <div class="form-group password-toggle-container">
+                            <label for="admin-password">Пароль</label>
+                            <input type="password" id="admin-password" required>
+                            <span class="password-toggle-icon"></span>
+                        </div>
+                        <button type="submit">Войти</button>
+                        <div id="admin-loader" class="loader hidden"></div>
+                        <p id="admin-error-message" class="error"></p>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div id="learner-info-container" class="hidden">
+            <div class="dashboard-header">
+                <img src="assets/images/logo.webp" alt="Логотип Колледжа" class="header-logo">
+                <h1>Личный кабинет учащегося</h1>
+                <button id="logout-button">Выйти</button>
+            </div>
+            <div class="dashboard-content">
+                <div id="personal-data-panel" class="panel">
+                    <h2>Личные данные</h2>
+                    <div id="personal-data-content"></div>
+                </div>
+                <div id="materials-panel" class="panel">
+                    <h2>Учебные материалы</h2>
+                    <div id="materials-list"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="pdf-modal" class="modal-overlay hidden">
+        <div class="modal-content wide">
+            <div class="pdf-header">
+                <h3 id="pdf-title"></h3>
+                <button id="pdf-close-btn">&times;</button>
+            </div>
+            <div id="pdf-viewer-container">
+                <canvas id="pdf-canvas"></canvas>
+            </div>
+            <div class="pdf-controls">
+                <button id="prev-page">Предыдущая</button>
+                <span>Страница: <span id="page-num"></span> / <span id="page-count"></span></span>
+                <button id="next-page">Следующая</button>
+            </div>
+        </div>
+    </div>
+    <script src="script.js" defer></script>
+    <div id="save-blocker" style="display: none;">
+        Сохранение страницы отключено.
+    </div>
+</body>
+</html>

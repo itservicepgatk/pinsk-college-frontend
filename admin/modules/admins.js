@@ -1,4 +1,65 @@
-import{DOMElements}from'../dom.js';import*as api from'../api.js';import*as ui from'../ui.js';import{state}from'../state.js';async function fetchAndRenderAdmins(){try{const admins=await api.getAdmins();DOMElements.adminsTableBody.innerHTML='';admins.forEach(admin=>{const row=document.createElement('tr');row.dataset.adminId=admin.id;const roleText=admin.role==='superadmin'?'Супер-админ':'Админ';const deleteButton=admin.role!=='superadmin'?`<button class="btn-danger btn-delete-admin">Удалить</button>`:'';row.innerHTML=`<td>${admin.login}</td><td>${roleText}</td><td>${deleteButton}</td>`;DOMElements.adminsTableBody.appendChild(row);});}catch(error){ui.showAlert('error','Ошибка!',error.message);}}
-async function handleAddAdmin(e){e.preventDefault();const login=DOMElements.addAdminForm.elements['new-admin-login'].value;const password=DOMElements.addAdminForm.elements['new-admin-password'].value;try{const data=await api.createAdmin({login,password,role:'admin'});ui.showAlert('success','Успех!',`Администратор ${data.login}создан.`);DOMElements.addAdminForm.reset();fetchAndRenderAdmins();}catch(error){ui.showAlert('error','Ошибка!',error.message);}}
-async function handleDeleteAdmin(e){if(!e.target.classList.contains('btn-delete-admin'))return;const adminId=e.target.closest('tr')?.dataset.adminId;if(!adminId)return;if(await ui.showConfirm('Вы уверены?','Удалить этого администратора?')){try{const data=await api.deleteAdmin(adminId);ui.showAlert('success','Удалено!',data.message);fetchAndRenderAdmins();}catch(error){ui.showAlert('error','Ошибка!',error.message);}}}
-export function initializeAdmins(){if(!DOMElements.manageAdminsBtn)return;DOMElements.manageAdminsBtn.addEventListener('click',()=>{DOMElements.manageAdminsModal.classList.remove('hidden');fetchAndRenderAdmins();});DOMElements.manageAdminsCloseBtn.addEventListener('click',()=>{DOMElements.manageAdminsModal.classList.add('hidden');});DOMElements.addAdminForm.addEventListener('submit',handleAddAdmin);DOMElements.adminsTableBody.addEventListener('click',handleDeleteAdmin);}
+import { DOMElements } from '../dom.js';
+import * as api from '../api.js';
+import * as ui from '../ui.js';
+import { state } from '../state.js';
+async function fetchAndRenderAdmins() {
+    try {
+        const admins = await api.getAdmins();
+        DOMElements.adminsTableBody.innerHTML = '';
+        admins.forEach(admin => {
+            const row = document.createElement('tr');
+            row.dataset.adminId = admin.id;
+            const roleText = admin.role === 'superadmin' ? 'Супер-админ' : 'Админ';
+            const deleteButton = admin.role !== 'superadmin'
+                ? `<button class="btn-danger btn-delete-admin">Удалить</button>`
+                : '';
+            row.innerHTML = `
+                <td>${admin.login}</td>
+                <td>${roleText}</td>
+                <td>${deleteButton}</td>
+            `;
+            DOMElements.adminsTableBody.appendChild(row);
+        });
+    } catch (error) {
+        ui.showAlert('error', 'Ошибка!', error.message);
+    }
+}
+async function handleAddAdmin(e) {
+    e.preventDefault();
+    const login = DOMElements.addAdminForm.elements['new-admin-login'].value;
+    const password = DOMElements.addAdminForm.elements['new-admin-password'].value;
+    try {
+        const data = await api.createAdmin({ login, password, role: 'admin' });
+        ui.showAlert('success', 'Успех!', `Администратор ${data.login} создан.`);
+        DOMElements.addAdminForm.reset();
+        fetchAndRenderAdmins();
+    } catch (error) {
+        ui.showAlert('error', 'Ошибка!', error.message);
+    }
+}
+async function handleDeleteAdmin(e) {
+    if (!e.target.classList.contains('btn-delete-admin')) return;
+    const adminId = e.target.closest('tr')?.dataset.adminId;
+    if (!adminId) return;
+    if (await ui.showConfirm('Вы уверены?', 'Удалить этого администратора?')) {
+        try {
+            const data = await api.deleteAdmin(adminId);
+            ui.showAlert('success', 'Удалено!', data.message);
+            fetchAndRenderAdmins();
+        } catch (error) {
+            ui.showAlert('error', 'Ошибка!', error.message);
+        }
+    }
+}
+export function initializeAdmins() {
+    if (!DOMElements.manageAdminsBtn) return;
+    DOMElements.manageAdminsBtn.addEventListener('click', () => {
+        DOMElements.manageAdminsModal.classList.remove('hidden');
+        fetchAndRenderAdmins();
+    });
+    DOMElements.manageAdminsCloseBtn.addEventListener('click', () => {
+        DOMElements.manageAdminsModal.classList.add('hidden');
+    });
+    DOMElements.addAdminForm.addEventListener('submit', handleAddAdmin);
+    DOMElements.adminsTableBody.addEventListener('click', handleDeleteAdmin);
+}

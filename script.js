@@ -1,4 +1,4 @@
-const API_URL='https:
+const API_URL = 'https:
 const appWrapper = document.getElementById('app-wrapper');
 const loginViewContainer = document.getElementById('login-view-container');
 const learnerInfoContainer = document.getElementById('learner-info-container');
@@ -47,7 +47,7 @@ async function handleLearnerLogin(event) {
     learnerLoader.classList.remove('hidden');
     learnerForm.querySelector('button').disabled = true;
     const slowConnectionTimer = setTimeout(() => {
-        slowConnectionMessage.textContent = 'Плохое соединение с интернетом,подождите пожалуйста...';
+        slowConnectionMessage.textContent = 'Плохое соединение с интернетом, подождите пожалуйста...';
         slowConnectionMessage.classList.remove('hidden');
     }, 3000);
     try {
@@ -229,7 +229,7 @@ async function openPdfViewer(path, name) {
     pdfModal.classList.remove('hidden');
     const token = localStorage.getItem('learnerToken');
     if (!token) {
-        Swal.fire('Ошибка', 'Ваша сессия истекла.Пожалуйста,войдите заново.', 'error');
+        Swal.fire('Ошибка', 'Ваша сессия истекла. Пожалуйста, войдите заново.', 'error');
         pdfModal.classList.add('hidden');
         return;
     }
@@ -302,4 +302,7 @@ document.querySelectorAll('.password-toggle-icon').forEach(icon => {
             icon.classList.add('is-visible');
         } else {
             passwordInput.type = 'password';
-            icon.classList.remove('is-visible'
+            icon.classList.remove('is-visible');
+        }
+    });
+});
