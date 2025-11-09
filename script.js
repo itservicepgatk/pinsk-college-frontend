@@ -1,4 +1,4 @@
-const API_URL = 'https:
+const API_URL = 'https://pinsk-college-backend.onrender.com';
 const appWrapper = document.getElementById('app-wrapper');
 const loginViewContainer = document.getElementById('login-view-container');
 const learnerInfoContainer = document.getElementById('learner-info-container');
@@ -23,7 +23,7 @@ const nextPageBtn = document.getElementById('next-page');
 const pageNumSpan = document.getElementById('page-num');
 const pageCountSpan = document.getElementById('page-count');
 let heartbeatInterval = null;
-pdfjsLib.GlobalWorkerOptions.workerSrc = `https:
+pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js`;
 let pdfDoc = null;
 let pageNum = 1;
 tabsContainer.addEventListener('click', (e) => {
