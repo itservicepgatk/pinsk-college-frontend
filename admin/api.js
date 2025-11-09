@@ -1,71 +1,7 @@
-import { API_URL } from './config.js';
-import { state } from './state.js';
-
-async function fetchWithAuth(endpoint, options = {}) {
-    const headers = { ...options.headers };
-    if (state.token) {
-        headers['Authorization'] = `Bearer ${state.token}`;
-    }
-    const response = await fetch(`${API_URL}${endpoint}`, { ...options, headers });
-    if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ message: response.statusText }));
-        throw new Error(errorData.message);
-    }
-    return response.json();
-}
-
-async function fetchWithAuthFormData(endpoint, formData) {
-    const headers = {};
-    if (state.token) {
-        headers['Authorization'] = `Bearer ${state.token}`;
-    }
-    const response = await fetch(`${API_URL}${endpoint}`, { method: 'POST', headers, body: formData });
-    if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ message: response.statusText }));
-        throw new Error(errorData.message);
-    }
-    return response.json();
-}
-
-export const adminLogin = (login, password) => fetch(`${API_URL}/admin/login`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ login, password })
-});
-
-export const getLearners = (params) => fetchWithAuth(`/api/learners?${params.toString()}`);
-export const createLearner = (data) => fetchWithAuth('/api/learners', { method: 'POST', body: JSON.stringify(data), headers: { 'Content-Type': 'application/json' } });
-export const updateLearner = (id, data) => fetchWithAuth(`/api/learners/${id}`, { method: 'PUT', body: JSON.stringify(data), headers: { 'Content-Type': 'application/json' } });
-export const deleteLearner = (id) => fetchWithAuth(`/api/learners/${id}`, { method: 'DELETE' });
-export const deleteMultipleLearners = (ids) => fetchWithAuth('/api/learners', { method: 'DELETE', body: JSON.stringify({ ids }), headers: { 'Content-Type': 'application/json' } });
-export const exportLearners = () => fetchWithAuth('/api/learners/export');
-export const importLearners = (learners) => fetchWithAuth('/api/learners/import', { method: 'POST', body: JSON.stringify({ learners }), headers: { 'Content-Type': 'application/json' } });
-
-export const getGroups = () => fetchWithAuth('/api/stats/groups');
-export const updateGroup = (data) => fetchWithAuth('/api/learners/groups/update', { method: 'PUT', body: JSON.stringify(data), headers: { 'Content-Type': 'application/json' } });
-export const deleteGroup = (groupName) => fetchWithAuth(`/api/learners/groups/${encodeURIComponent(groupName)}`, { method: 'DELETE' });
-
-export const getDashboardStats = () => fetchWithAuth('/api/stats');
-export const getMaterialsForGroup = (groupName) => fetchWithAuth(`/api/materials?group_name=${groupName}`);
-export const deleteMaterial = (filePath) => fetchWithAuth('/api/materials/delete', { method: 'DELETE', body: JSON.stringify({ filePath }), headers: { 'Content-Type': 'application/json' } });
-export const uploadMaterial = (formData) => fetchWithAuthFormData('/api/materials/upload', formData);
-
-export const getAuditLogs = (params) => fetchWithAuth(`/api/audit?${params.toString()}`);
-export const getAuditActionTypes = () => fetchWithAuth('/api/audit/actions');
-export const deleteAuditLog = (id) => fetchWithAuth(`/api/audit/${id}`, { method: 'DELETE' });
-export const exportAuditLogs = (params) => fetchWithAuth(`/api/audit/export?${params.toString()}`);
-export const clearAuditLogs = (data) => fetchWithAuth('/api/audit/clear', { method: 'POST', body: JSON.stringify(data), headers: { 'Content-Type': 'application/json' } });
-
-export const getAdmins = () => fetchWithAuth('/api/admins');
-export const createAdmin = (data) => fetchWithAuth('/api/admins', { method: 'POST', body: JSON.stringify(data), headers: { 'Content-Type': 'application/json' } });
-export const deleteAdmin = (id) => fetchWithAuth(`/api/admins/${id}`, { method: 'DELETE' });
-
-export const getBackups = () => fetchWithAuth('/api/backups');
-export const createBackup = () => fetchWithAuth('/api/backups', { method: 'POST' });
-export const restoreBackup = (fileName) => fetchWithAuth('/api/backups/restore', { method: 'POST', body: JSON.stringify({ fileName }), headers: { 'Content-Type': 'application/json' } });
-export const deleteBackup = (data) => fetchWithAuth('/api/backups', { method: 'DELETE', body: JSON.stringify(data), headers: { 'Content-Type': 'application/json' } });
-
-export const getMaintenanceStatus = () => fetch(`${API_URL}/api/settings/maintenance`).then(res => res.json());
-export const setMaintenanceStatus = (data) => fetchWithAuth('/api/settings/maintenance', { method: 'POST', body: JSON.stringify(data), headers: { 'Content-Type': 'application/json' } });
-
-export const logLogout = (data) => fetchWithAuth('/api/audit/logout', { method: 'POST', body: JSON.stringify(data), headers: { 'Content-Type': 'application/json' } });
+import{API_URL}from'./config.js';import{state}from'./state.js';async function fetchWithAuth(endpoint,options={}){const headers={...options.headers};if(state.token){headers['Authorization']=`Bearer ${state.token}`;}
+const response=await fetch(`${API_URL}${endpoint}`,{...options,headers});if(!response.ok){const errorData=await response.json().catch(()=>({message:response.statusText}));throw new Error(errorData.message);}
+return response.json();}
+async function fetchWithAuthFormData(endpoint,formData){const headers={};if(state.token){headers['Authorization']=`Bearer ${state.token}`;}
+const response=await fetch(`${API_URL}${endpoint}`,{method:'POST',headers,body:formData});if(!response.ok){const errorData=await response.json().catch(()=>({message:response.statusText}));throw new Error(errorData.message);}
+return response.json();}
+export const adminLogin=(login,password)=>fetch(`${API_URL}/admin/login`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({login,password})});export const getLearners=(params)=>fetchWithAuth(`/api/learners?${params.toString()}`);export const createLearner=(data)=>fetchWithAuth('/api/learners',{method:'POST',body:JSON.stringify(data),headers:{'Content-Type':'application/json'}});export const updateLearner=(id,data)=>fetchWithAuth(`/api/learners/${id}`,{method:'PUT',body:JSON.stringify(data),headers:{'Content-Type':'application/json'}});export const deleteLearner=(id)=>fetchWithAuth(`/api/learners/${id}`,{method:'DELETE'});export const deleteMultipleLearners=(ids)=>fetchWithAuth('/api/learners',{method:'DELETE',body:JSON.stringify({ids}),headers:{'Content-Type':'application/json'}});export const exportLearners=()=>fetchWithAuth('/api/learners/export');export const importLearners=(learners)=>fetchWithAuth('/api/learners/import',{method:'POST',body:JSON.stringify({learners}),headers:{'Content-Type':'application/json'}});export const getGroups=()=>fetchWithAuth('/api/stats/groups');export const updateGroup=(data)=>fetchWithAuth('/api/learners/groups/update',{method:'PUT',body:JSON.stringify(data),headers:{'Content-Type':'application/json'}});export const deleteGroup=(groupName)=>fetchWithAuth(`/api/learners/groups/${encodeURIComponent(groupName)}`,{method:'DELETE'});export const getDashboardStats=()=>fetchWithAuth('/api/stats');export const getMaterialsForGroup=(groupName)=>fetchWithAuth(`/api/materials?group_name=${groupName}`);export const deleteMaterial=(filePath)=>fetchWithAuth('/api/materials/delete',{method:'DELETE',body:JSON.stringify({filePath}),headers:{'Content-Type':'application/json'}});export const uploadMaterial=(formData)=>fetchWithAuthFormData('/api/materials/upload',formData);export const getAuditLogs=(params)=>fetchWithAuth(`/api/audit?${params.toString()}`);export const getAuditActionTypes=()=>fetchWithAuth('/api/audit/actions');export const deleteAuditLog=(id)=>fetchWithAuth(`/api/audit/${id}`,{method:'DELETE'});export const exportAuditLogs=(params)=>fetchWithAuth(`/api/audit/export?${params.toString()}`);export const clearAuditLogs=(data)=>fetchWithAuth('/api/audit/clear',{method:'POST',body:JSON.stringify(data),headers:{'Content-Type':'application/json'}});export const logLogout=(data)=>fetchWithAuth('/api/audit/logout',{method:'POST',body:JSON.stringify(data),headers:{'Content-Type':'application/json'}});export const getAdmins=()=>fetchWithAuth('/api/admins');export const createAdmin=(data)=>fetchWithAuth('/api/admins',{method:'POST',body:JSON.stringify(data),headers:{'Content-Type':'application/json'}});export const deleteAdmin=(id)=>fetchWithAuth(`/api/admins/${id}`,{method:'DELETE'});export const getBackups=()=>fetchWithAuth('/api/backups');export const createBackup=()=>fetchWithAuth('/api/backups',{method:'POST'});export const restoreBackup=(fileName)=>fetchWithAuth('/api/backups/restore',{method:'POST',body:JSON.stringify({fileName}),headers:{'Content-Type':'application/json'}});export const deleteBackup=(data)=>fetchWithAuth('/api/backups',{method:'DELETE',body:JSON.stringify(data),headers:{'Content-Type':'application/json'}});export const getMaintenanceStatus=()=>fetch(`${API_URL}/api/settings/maintenance`).then(res=>res.json());export const setMaintenanceStatus=(data)=>fetchWithAuth('/api/settings/maintenance',{method:'POST',body:JSON.stringify(data),headers:{'Content-Type':'application/json'}});export const getSessionLogs=(params)=>fetchWithAuth(`/api/sessions?${params.toString()}`);export const getDebtors=()=>fetchWithAuth('/api/learners/debtors');
