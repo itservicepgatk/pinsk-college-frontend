@@ -83,4 +83,5 @@ export const DOMElements = {
     debtorsModal: document.getElementById('debtors-modal'),
     debtorsModalCloseBtn: document.getElementById('debtors-modal-close-btn'),
     debtorsTableBody: document.getElementById('debtors-table-body'),
+
 };

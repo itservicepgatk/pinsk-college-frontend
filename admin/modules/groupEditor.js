@@ -3,6 +3,8 @@ import * as api from '../api.js';
 import * as ui from '../ui.js';
 import { initializeDashboard } from './dashboard.js';
 import { initializeGroups } from './groups.js';
+
+// Вспомогательная функция для скачивания файла
 function downloadFile(content, fileName, contentType) {
     const a = document.createElement("a");
     const file = new Blob([content], { type: contentType });
@@ -11,16 +13,19 @@ function downloadFile(content, fileName, contentType) {
     a.click();
     URL.revokeObjectURL(a.href);
 }
+
 async function handleResetPasswords() {
     const group_name = DOMElements.groupSelect.value;
     if (!group_name) {
         return ui.showAlert('warning', 'Ошибка', 'Сначала выберите группу.');
     }
+
     const isConfirmed = await ui.showConfirm(
         `Сбросить пароли для группы ${group_name}?`,
         'Пароли ВСЕХ учащихся в этой группе будут безвозвратно изменены! Вы получите CSV-файл с новыми данными.',
         'Да, сбросить!'
     );
+
     if (isConfirmed) {
         try {
             Swal.fire({ title: 'Сброс паролей...', text: 'Это может занять несколько секунд.', didOpen: () => Swal.showLoading() });
@@ -34,6 +39,8 @@ async function handleResetPasswords() {
         }
     }
 }
+
+
 async function openGroupEditor() {
     DOMElements.groupEditorForm.reset();
     DOMElements.groupSelect.innerHTML = '<option value="">-- Загрузка... --</option>';
@@ -52,15 +59,18 @@ async function openGroupEditor() {
         DOMElements.groupEditorModal.classList.add('hidden');
     }
 }
+
 function closeGroupEditor() {
     DOMElements.groupEditorModal.classList.add('hidden');
 }
+
 async function handleGroupUpdate(e) {
     e.preventDefault();
     const group_name = DOMElements.groupSelect.value;
     if (!group_name) {
         return ui.showAlert('warning', 'Ошибка', 'Пожалуйста, выберите группу.');
     }
+
     const updates = {};
     const course = DOMElements.groupEditorForm.elements['group-course'].value;
     const specialty = DOMElements.groupEditorForm.elements['group-specialty'].value;
@@ -70,14 +80,17 @@ async function handleGroupUpdate(e) {
     if (specialty) updates.specialty = specialty;
     if (sessionSchedule) updates.session_schedule = sessionSchedule;
     if (academicDebts) updates.academic_debts = academicDebts;
+
     const new_group_name = DOMElements.newGroupNameInput.value.trim();
     if (Object.keys(updates).length === 0 && !new_group_name) {
         return ui.showAlert('info', 'Информация', 'Вы не заполнили ни одного поля для обновления.');
     }
+
     const requestBody = { group_name, updates };
     if (new_group_name) {
         requestBody.new_group_name = new_group_name;
     }
+
     if (await ui.showConfirm(`Подтвердите изменения для группы ${group_name}`, 'Это действие затронет всех учащихся в группе!', 'Да, обновить!')) {
         try {
             const resData = await api.updateGroup(requestBody);
@@ -90,11 +103,13 @@ async function handleGroupUpdate(e) {
         }
     }
 }
+
 async function getGroupCourse(groupName) {
     const params = new URLSearchParams({ searchGroup: groupName, limit: 1 });
     const data = await api.getLearners(params);
     return data.learners && data.learners.length > 0 ? data.learners[0].course : 0;
 }
+
 async function changeCourse(increment) {
     const group_name = DOMElements.groupSelect.value;
     if (!group_name) return ui.showAlert('warning', 'Ошибка', 'Сначала выберите группу.');
@@ -103,6 +118,7 @@ async function changeCourse(increment) {
         const nextCourse = Number(currentCourse) + increment;
         const actionText = increment > 0 ? 'Перевести' : 'Понизить курс';
         if (nextCourse < 1) return ui.showAlert('info', 'Внимание', 'Курс не может быть меньше 1.');
+
         if (await ui.showConfirm(`${actionText} группу ${group_name} на ${nextCourse} курс?`, '', `Да, ${actionText.toLowerCase()}!`)) {
             const resData = await api.updateGroup({ group_name, updates: { course: nextCourse } });
             ui.showAlert('success', 'Успех!', resData.message);
@@ -112,6 +128,7 @@ async function changeCourse(increment) {
         ui.showAlert('error', 'Ошибка!', 'Не удалось определить текущий курс группы.');
     }
 }
+
 async function copySchedule() {
     const allGroups = Array.from(DOMElements.groupSelect.options).map(opt => opt.value).filter(val => val);
     const { value: sourceGroup } = await Swal.fire({
@@ -137,8 +154,11 @@ async function copySchedule() {
         }
     }
 }
+
 export function initializeGroupEditor() {
+    // Динамически добавляем кнопку, т.к. она была добавлена в HTML
     DOMElements.resetPasswordsBtn = document.getElementById('reset-passwords-btn');
+
     DOMElements.groupEditorBtn.addEventListener('click', openGroupEditor);
     DOMElements.groupEditorCloseBtn.addEventListener('click', closeGroupEditor);
     DOMElements.groupEditorCancelBtn.addEventListener('click', closeGroupEditor);

@@ -1,6 +1,7 @@
 import { DOMElements } from '../dom.js';
 import * as api from '../api.js';
 import { openLearnerModal } from './learners.js';
+
 function renderGeneralTab(learner) {
     const container = document.getElementById('profile-tab-general');
     container.innerHTML = `
@@ -22,6 +23,7 @@ function renderGeneralTab(learner) {
         openLearnerModal('edit', learner.id);
     });
 }
+
 function renderSessionsTab(sessions) {
     const container = document.getElementById('profile-tab-sessions');
     if (!sessions || sessions.length === 0) {
@@ -43,6 +45,7 @@ function renderSessionsTab(sessions) {
         </table>
     `;
 }
+
 function renderAuditTab(auditLogs) {
     const container = document.getElementById('profile-tab-audit');
     if (!auditLogs || auditLogs.length === 0) {
@@ -64,13 +67,16 @@ function renderAuditTab(auditLogs) {
         </table>
     `;
 }
+
 export async function openLearnerProfile(learnerId) {
     const modal = document.getElementById('learner-profile-modal');
     const title = document.getElementById('profile-modal-title');
     document.getElementById('profile-tab-general').innerHTML = '<p>Загрузка...</p>';
     document.getElementById('profile-tab-sessions').innerHTML = '<p>Загрузка...</p>';
     document.getElementById('profile-tab-audit').innerHTML = '<p>Загрузка...</p>';
+    
     modal.classList.remove('hidden');
+
     try {
         const data = await api.getLearnerProfile(learnerId);
         title.textContent = `Профиль: ${data.learner.full_name}`;
@@ -82,18 +88,23 @@ export async function openLearnerProfile(learnerId) {
         document.getElementById('profile-tab-general').innerHTML = `<p style="color: red;">${error.message}</p>`;
     }
 }
+
 export function initializeLearnerProfile() {
     const modal = document.getElementById('learner-profile-modal');
     if (!modal) return;
+
     const tabLinks = modal.querySelectorAll('.tab-link');
     const tabContents = modal.querySelectorAll('.profile-tab-content');
+
     document.getElementById('profile-modal-close-btn').addEventListener('click', () => {
         modal.classList.add('hidden');
     });
+
     tabLinks.forEach(link => {
         link.addEventListener('click', () => {
             tabLinks.forEach(l => l.classList.remove('active'));
             tabContents.forEach(c => c.classList.remove('active'));
+
             link.classList.add('active');
             document.getElementById(link.dataset.tab).classList.add('active');
         });

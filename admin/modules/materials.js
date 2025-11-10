@@ -1,6 +1,7 @@
 import { DOMElements } from '../dom.js';
 import * as api from '../api.js';
 import * as ui from '../ui.js';
+
 async function renderMaterialsForGroup(groupName) {
     DOMElements.currentMaterialsList.innerHTML = '<p>Загрузка...</p>';
     try {
@@ -23,6 +24,7 @@ async function renderMaterialsForGroup(groupName) {
         DOMElements.currentMaterialsList.innerHTML = `<p style="color: red;">${error.message}</p>`;
     }
 }
+
 async function handleDeleteMaterial(e) {
     if (!e.target.classList.contains('btn-delete-material')) return;
     const filePath = e.target.dataset.path;
@@ -37,6 +39,7 @@ async function handleDeleteMaterial(e) {
         }
     }
 }
+
 async function handleUploadMaterial(e) {
     e.preventDefault();
     const group_name = DOMElements.materialGroupSelect.value;
@@ -58,6 +61,7 @@ async function handleUploadMaterial(e) {
         ui.showAlert('error', 'Ошибка!', error.message);
     }
 }
+
 export function initializeMaterials() {
     DOMElements.materialManagerBtn.addEventListener('click', async () => {
         DOMElements.materialManagerForm.reset();
@@ -80,9 +84,11 @@ export function initializeMaterials() {
             DOMElements.materialManagerModal.classList.add('hidden');
         }
     });
+
     DOMElements.materialManagerCloseBtn.addEventListener('click', () => {
         DOMElements.materialManagerModal.classList.add('hidden');
     });
+
     DOMElements.materialGroupSelect.addEventListener('change', () => {
         const selectedGroup = DOMElements.materialGroupSelect.value;
         const show = !!selectedGroup;
@@ -90,6 +96,7 @@ export function initializeMaterials() {
         DOMElements.uploadMaterialContainer.classList.toggle('hidden', !show);
         if (show) renderMaterialsForGroup(selectedGroup);
     });
+
     DOMElements.currentMaterialsList.addEventListener('click', handleDeleteMaterial);
     DOMElements.materialManagerForm.addEventListener('submit', handleUploadMaterial);
 }

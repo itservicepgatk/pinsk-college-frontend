@@ -1,8 +1,10 @@
 import { DOMElements } from '../dom.js';
 import * as api from '../api.js';
 import * as ui from '../ui.js';
+
 let activeTooltip = null;
-let groupChart = null; 
+let groupChart = null;
+
 function closeActiveTooltip() {
     if (activeTooltip) {
         activeTooltip.originalParent.appendChild(activeTooltip.element);
@@ -12,6 +14,7 @@ function closeActiveTooltip() {
         document.removeEventListener('click', closeActiveTooltip, true);
     }
 }
+
 function handleDebtorTooltip(e) {
     const btn = e.target.closest('.debtor-info-btn');
     if (!btn) return;
@@ -38,6 +41,7 @@ function handleDebtorTooltip(e) {
         document.addEventListener('click', closeActiveTooltip, true);
     }, 0);
 }
+
 async function fetchDashboardStats() {
     try {
         const stats = await api.getDashboardStats();
@@ -49,6 +53,7 @@ async function fetchDashboardStats() {
         DOMElements.debtorsCountStat.textContent = '—';
     }
 }
+
 function createDebtorsList(debtors) {
     if (!debtors || debtors.length === 0) {
         return '<span class="debtor-info-none">Нет</span>';
@@ -56,14 +61,18 @@ function createDebtorsList(debtors) {
     const listItems = debtors.map(d => `<li><strong>${d.full_name}:</strong> ${d.debt}</li>`).join('');
     return `<div class="debtor-info">${debtors.length}<button class="debtor-info-btn">?</button><ul class="debtor-tooltip hidden">${listItems}</ul></div>`;
 }
+
 function renderGroupChart(groupsData) {
     const ctx = document.getElementById('group-chart').getContext('2d');
+
     if (groupChart) {
         groupChart.destroy();
     }
+
     const labels = groupsData.map(g => `Гр. ${g.group_name}`);
     const totalLearnersData = groupsData.map(g => g.total_learners);
     const debtorsData = groupsData.map(g => g.debtor_count);
+
     groupChart = new Chart(ctx, {
         type: 'bar',
         data: {
@@ -97,17 +106,22 @@ function renderGroupChart(groupsData) {
                 y: {
                     beginAtZero: true,
                     ticks: {
-                        stepSize: 1 
+                        stepSize: 1
                     }
                 }
             }
         }
     });
 }
+
 async function openDetailsModal() {
     try {
         const groupsData = await api.getGroups();
-        groupsData.sort((a, b) => a.group_name.localeCompare(b.group_name, undefined, { numeric: true }));
+        
+        groupsData.sort((a, b) => 
+            (a.group_name || '').localeCompare(b.group_name || '', undefined, { numeric: true })
+        );
+
         DOMElements.groupsStatsTableBody.innerHTML = '';
         groupsData.forEach(group => {
             const row = document.createElement('tr');
@@ -119,15 +133,19 @@ async function openDetailsModal() {
             `;
             DOMElements.groupsStatsTableBody.appendChild(row);
         });
+        
         renderGroupChart(groupsData);
+        
         DOMElements.detailsModal.classList.remove('hidden');
     } catch (error) {
         ui.showAlert('error', 'Ошибка!', error.message);
     }
 }
+
 export function initializeDashboard() {
     fetchDashboardStats();
     DOMElements.detailsBtn.addEventListener('click', openDetailsModal);
+    
     DOMElements.detailsModalCloseBtn.addEventListener('click', () => {
         closeActiveTooltip();
         DOMElements.detailsModal.classList.add('hidden');
@@ -135,5 +153,6 @@ export function initializeDashboard() {
             groupChart.destroy();
         }
     });
+    
     DOMElements.groupsStatsTableBody.addEventListener('click', handleDebtorTooltip);
 }

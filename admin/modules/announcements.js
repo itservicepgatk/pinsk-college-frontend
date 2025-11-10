@@ -1,13 +1,16 @@
 import { DOMElements } from '../dom.js';
 import * as api from '../api.js';
 import * as ui from '../ui.js';
+
 function renderAnnouncements(announcements) {
     const container = document.getElementById('announcements-list-container');
     container.innerHTML = '';
+
     if (announcements.length === 0) {
         container.innerHTML = '<p>Объявлений пока нет.</p>';
         return;
     }
+
     const table = document.createElement('table');
     table.className = 'learners-table';
     table.innerHTML = `
@@ -23,6 +26,7 @@ function renderAnnouncements(announcements) {
         <tbody>
         </tbody>
     `;
+
     const tbody = table.querySelector('tbody');
     announcements.forEach(ann => {
         const row = document.createElement('tr');
@@ -36,8 +40,11 @@ function renderAnnouncements(announcements) {
         `;
         tbody.appendChild(row);
     });
+
     container.appendChild(table);
 }
+
+
 async function fetchAndRenderAnnouncements() {
     try {
         const announcements = await api.getAnnouncements();
@@ -46,17 +53,21 @@ async function fetchAndRenderAnnouncements() {
         ui.showAlert('error', 'Ошибка!', error.message);
     }
 }
+
 async function handleFormSubmit(e) {
     e.preventDefault();
+    
     const formData = new FormData();
     formData.append('title', DOMElements.announcementForm.elements['announcement-title'].value);
     formData.append('content', DOMElements.announcementForm.elements['announcement-content'].value);
     formData.append('type', DOMElements.announcementForm.elements['announcement-type'].value);
     formData.append('target_group', DOMElements.announcementForm.elements['announcement-group-select'].value);
+
     const fileInput = DOMElements.announcementForm.elements['announcement-file'];
     if (fileInput.files[0]) {
         formData.append('announcementFile', fileInput.files[0]);
     }
+
     try {
         await api.createAnnouncement(formData);
         ui.showAlert('success', 'Успех!', 'Объявление опубликовано.');
@@ -67,6 +78,7 @@ async function handleFormSubmit(e) {
         ui.showAlert('error', 'Ошибка!', error.message);
     }
 }
+
 async function handleDelete(e) {
     if (!e.target.classList.contains('btn-delete-announcement')) return;
     const id = e.target.dataset.id;
@@ -80,6 +92,7 @@ async function handleDelete(e) {
         }
     }
 }
+
 async function populateGroupSelect() {
     const select = DOMElements.announcementForm.elements['announcement-group-select'];
     try {
@@ -95,23 +108,31 @@ async function populateGroupSelect() {
         select.innerHTML = '<option value="">Ошибка загрузки</option>';
     }
 }
+
+
 export function initializeAnnouncements() {
+    // Динамически добавляем элементы в DOM, так как они были добавлены в HTML
     DOMElements.announcementsBtn = document.getElementById('announcements-btn');
     DOMElements.announcementsModal = document.getElementById('announcements-modal');
     DOMElements.announcementsCloseBtn = document.getElementById('announcements-close-btn');
     DOMElements.announcementForm = document.getElementById('announcement-form');
+    
     DOMElements.announcementsBtn.addEventListener('click', () => {
         DOMElements.announcementsModal.classList.remove('hidden');
         fetchAndRenderAnnouncements();
         populateGroupSelect();
     });
+
     DOMElements.announcementsCloseBtn.addEventListener('click', () => {
         DOMElements.announcementsModal.classList.add('hidden');
     });
+
     DOMElements.announcementForm.addEventListener('submit', handleFormSubmit);
+
     DOMElements.announcementForm.elements['announcement-type'].addEventListener('change', (e) => {
         const groupContainer = document.getElementById('announcement-group-container');
         groupContainer.classList.toggle('hidden', e.target.value !== 'group');
     });
+    
     document.getElementById('announcements-list-container').addEventListener('click', handleDelete);
 }
