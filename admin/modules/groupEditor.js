@@ -3,6 +3,37 @@ import * as api from '../api.js';
 import * as ui from '../ui.js';
 import { initializeDashboard } from './dashboard.js';
 import { initializeGroups } from './groups.js';
+function downloadFile(content, fileName, contentType) {
+    const a = document.createElement("a");
+    const file = new Blob([content], { type: contentType });
+    a.href = URL.createObjectURL(file);
+    a.download = fileName;
+    a.click();
+    URL.revokeObjectURL(a.href);
+}
+async function handleResetPasswords() {
+    const group_name = DOMElements.groupSelect.value;
+    if (!group_name) {
+        return ui.showAlert('warning', 'Ошибка', 'Сначала выберите группу.');
+    }
+    const isConfirmed = await ui.showConfirm(
+        `Сбросить пароли для группы ${group_name}?`,
+        'Пароли ВСЕХ учащихся в этой группе будут безвозвратно изменены! Вы получите CSV-файл с новыми данными.',
+        'Да, сбросить!'
+    );
+    if (isConfirmed) {
+        try {
+            Swal.fire({ title: 'Сброс паролей...', text: 'Это может занять несколько секунд.', didOpen: () => Swal.showLoading() });
+            const csvData = await api.resetGroupPasswords(group_name);
+            Swal.close();
+            downloadFile(csvData, `new_passwords_${group_name}.csv`, 'text/csv');
+            ui.showAlert('success', 'Успех!', 'Пароли сброшены. Файл с новыми данными был скачан.');
+        } catch (error) {
+            Swal.close();
+            ui.showAlert('error', 'Ошибка!', error.message);
+        }
+    }
+}
 async function openGroupEditor() {
     DOMElements.groupEditorForm.reset();
     DOMElements.groupSelect.innerHTML = '<option value="">-- Загрузка... --</option>';
@@ -13,7 +44,7 @@ async function openGroupEditor() {
         groups.forEach(group => {
             const option = document.createElement('option');
             option.value = group.group_name;
-            option.textContent = `Группа ${group.group_name} (${group.learner_count} чел.)`;
+            option.textContent = `Группа ${group.group_name} (${group.total_learners} чел.)`;
             DOMElements.groupSelect.appendChild(option);
         });
     } catch (error) {
@@ -107,6 +138,7 @@ async function copySchedule() {
     }
 }
 export function initializeGroupEditor() {
+    DOMElements.resetPasswordsBtn = document.getElementById('reset-passwords-btn');
     DOMElements.groupEditorBtn.addEventListener('click', openGroupEditor);
     DOMElements.groupEditorCloseBtn.addEventListener('click', closeGroupEditor);
     DOMElements.groupEditorCancelBtn.addEventListener('click', closeGroupEditor);
@@ -114,4 +146,5 @@ export function initializeGroupEditor() {
     DOMElements.incrementCourseBtn.addEventListener('click', () => changeCourse(1));
     DOMElements.decrementCourseBtn.addEventListener('click', () => changeCourse(-1));
     DOMElements.copyScheduleBtn.addEventListener('click', copySchedule);
+    DOMElements.resetPasswordsBtn.addEventListener('click', handleResetPasswords);
 }

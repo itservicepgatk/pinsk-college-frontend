@@ -13,6 +13,9 @@ import { initializeSettings } from './modules/settings.js';
 import { initializeGroupEditor } from './modules/groupEditor.js';
 import { initializeSessions } from './modules/sessions.js';
 import { initializeDebtors } from './modules/debtors.js';
+import { initializeAnnouncements } from './modules/announcements.js';
+import { initializeLearnerProfile } from './modules/learnerProfile.js';
+import { initializeReports } from './modules/reports.js';
 export function initializeApp() {
     showView('dashboard-container');
     toggleSuperAdminFeatures(state.userRole);
@@ -28,6 +31,9 @@ export function initializeApp() {
     initializeGroupEditor();
     initializeSessions();
     initializeDebtors();
+    initializeAnnouncements();
+    initializeLearnerProfile();
+    initializeReports();
 }
 document.addEventListener('DOMContentLoaded', async () => {
     try {
@@ -46,6 +52,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (state.token) {
         initializeApp();
     } else {
-        showView('admin-login-view-container');
+        window.location.href = 'index.html';
     }
 });

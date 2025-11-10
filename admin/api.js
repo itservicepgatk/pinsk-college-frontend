@@ -60,3 +60,36 @@ export const getMaintenanceStatus = () => fetch(`${API_URL}/api/settings/mainten
 export const setMaintenanceStatus = (data) => fetchWithAuth('/api/settings/maintenance', { method: 'POST', body: JSON.stringify(data), headers: { 'Content-Type': 'application/json' } });
 export const getSessionLogs = (params) => fetchWithAuth(`/api/sessions?${params.toString()}`);
 export const getDebtors = () => fetchWithAuth('/api/learners/debtors');
+export const getAnnouncements = () => fetchWithAuth('/api/announcements');
+export const createAnnouncement = (formData) => fetchWithAuthFormData('/api/announcements', formData);
+export const deleteAnnouncement = (id) => fetchWithAuth(`/api/announcements/${id}`, { method: 'DELETE' });
+export const resetGroupPasswords = async (groupName) => {
+    const response = await fetch(`${API_URL}/api/learners/groups/reset-passwords`, {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${state.token}`,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ group_name: groupName })
+    });
+    if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: response.statusText }));
+        throw new Error(errorData.message);
+    }
+    return response.text();
+};
+export const getLearnerProfile = (id) => fetchWithAuth(`/api/learners/${id}/profile`);
+export const getDebtorsReportCsv = async () => {
+    const response = await fetch(`${API_URL}/api/reports/debtors-csv`, {
+        headers: { 'Authorization': `Bearer ${state.token}` }
+    });
+    if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: response.statusText }));
+        throw new Error(errorData.message);
+    }
+    const disposition = response.headers.get('content-disposition');
+    const fileNameMatch = disposition && disposition.match(/filename="(.+?)"/);
+    const fileName = fileNameMatch ? fileNameMatch[1] : 'report.csv';
+    const csvData = await response.text();
+    return { csvData, fileName };
+};

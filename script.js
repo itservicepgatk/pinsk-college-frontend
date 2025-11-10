@@ -154,6 +154,32 @@ function displayLearnerInfo(data) {
     } else {
         materialsList.innerHTML = '<p>Для вашей группы учебные материалы еще не загружены.</p>';
     }
+    const announcementsContainer = document.getElementById('announcements-list');
+    announcementsContainer.innerHTML = '';
+    if (data.announcements && data.announcements.length > 0) {
+        data.announcements.forEach(ann => {
+            const item = document.createElement('div');
+            item.className = `announcement-item type-${ann.type}`;
+            const attachmentLink = ann.file_url 
+                ? `<div class="announcement-attachment">
+                       <a href="${ann.file_url}" target="_blank" rel="noopener noreferrer">
+                           📎 Скачать прикрепленный файл
+                       </a>
+                   </div>`
+                : '';
+            item.innerHTML = `
+                <div class="announcement-header">
+                    <span class="announcement-title">${ann.title}</span>
+                    <span class="announcement-date">${new Date(ann.created_at).toLocaleDateString('ru-RU')}</span>
+                </div>
+                <div class="announcement-content">${ann.content}</div>
+                ${attachmentLink}
+            `;
+            announcementsContainer.appendChild(item);
+        });
+    } else {
+        announcementsContainer.innerHTML = '<p>Актуальных объявлений нет.</p>';
+    }
     clearInterval(heartbeatInterval);
     heartbeatInterval = setInterval(async () => {
         const token = localStorage.getItem('learnerToken');

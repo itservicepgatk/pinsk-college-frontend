@@ -40,12 +40,12 @@ async function fetchAndRenderGroups() {
                     <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M21.5714 8.5H6.28571C5.33333 8.5 4.57143 9.22222 4.57143 10.125V17.375C4.57143 18.2778 5.33333 19 6.28571 19H21.5714C22.5238 19 23.2857 18.2778 23.2857 17.375V10.125C23.2857 9.22222 22.5238 8.5 21.5714 8.5Z" fill="#FFCA28"/><path d="M4.88889 17.5C4.09524 17.5 3.42857 16.8611 3.42857 16.1111V6.88889C3.42857 6.13889 4.09524 5.5 4.88889 5.5H10.8571C11.254 5.5 11.631 5.65278 11.9048 5.91667L13.1905 7.16667H19.7143C20.5079 7.16667 21.1746 7.80556 21.1746 8.55556V10.7222H6.55556C5.60317 10.7222 4.88889 11.4444 4.88889 12.3472V17.5Z" fill="#64B5F6"/></svg>
                 </div>
                 <div class="folder-name">Группа ${group.group_name}</div>
-                <div class="folder-count">Учащихся: ${group.learner_count}</div>
+                <div class="folder-count">Учащихся: ${group.total_learners}</div>
             `;
             folder.addEventListener('click', (e) => {
                 if (e.target.classList.contains('delete-group-btn')) {
                     e.stopPropagation();
-                    deleteGroup(group.group_name, group.learner_count);
+                    deleteGroup(group.group_name, group.total_learners);
                     return;
                 }
                 updateState({

@@ -1,20 +1,14 @@
-import {
-    DOMElements
-} from '../dom.js';
+import { DOMElements } from '../dom.js';
 import * as api from '../api.js';
 import * as ui from '../ui.js';
-import {
-    state,
-    updateState
-} from '../state.js';
-import {
-    initializeDashboard
-} from './dashboard.js';
+import { state, updateState } from '../state.js';
+import { initializeDashboard } from './dashboard.js';
+import { openLearnerProfile } from './learnerProfile.js';
 let searchTimer;
 function generateRandomPassword() {
     return Math.random().toString(36).slice(-8);
 }
-function openLearnerModal(mode, learnerId = null) {
+export function openLearnerModal(mode, learnerId = null) {
     DOMElements.learnerForm.reset();
     DOMElements.learnerForm.querySelector('#learner-id').value = '';
     if (mode === 'add') {
@@ -134,8 +128,9 @@ function handleLearnerAction(e) {
     const target = e.target;
     const learnerId = target.closest('tr')?.dataset.learnerId;
     if (!learnerId) return;
-    if (target.matches('.btn-edit')) {
-        openLearnerModal('edit', learnerId);
+    e.preventDefault();
+    if (target.matches('.learner-name-link')) {
+        openLearnerProfile(learnerId);
     } else if (target.matches('.btn-delete')) {
         deleteLearner(learnerId);
     }
@@ -166,11 +161,10 @@ function renderLearners(learnersToRender) {
         row.dataset.learnerId = learner.id;
         row.innerHTML = `
             <td><input type="checkbox" class="learner-checkbox" value="${learner.id}"></td>
-            <td>${learner.full_name}</td>
+            <td><a href="#" class="learner-name-link">${learner.full_name}</a></td>
             <td>${learner.group_name}</td>
             <td>${learner.login}</td>
             <td class="action-buttons">
-                <button class="btn-secondary btn-edit">Ред.</button>
                 <button class="btn-danger btn-delete">Удал.</button>
             </td>
         `;
