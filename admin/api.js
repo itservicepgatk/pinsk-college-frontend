@@ -46,7 +46,7 @@ export const updateGroup = (data) => fetchWithAuth('/api/learners/groups/update'
 export const deleteGroup = (groupName) => fetchWithAuth(`/api/learners/groups/${encodeURIComponent(groupName)}`, { method: 'DELETE' });
 
 export const getDashboardStats = () => fetchWithAuth('/api/stats');
-export const getMaterialsForGroup = (groupName) => fetchWithAuth(`/api/materials?group_name=${groupName}`);
+export const getMaterials = (groupName, path) => fetchWithAuth(`/api/materials?group_name=${groupName}&path=${path}`);
 export const deleteMaterial = (filePath) => fetchWithAuth('/api/materials/delete', { method: 'DELETE', body: JSON.stringify({ filePath }), headers: { 'Content-Type': 'application/json' } });
 export const uploadMaterial = (formData) => fetchWithAuthFormData('/api/materials/upload', formData);
 
@@ -75,6 +75,11 @@ export const getDebtors = () => fetchWithAuth('/api/learners/debtors');
 
 export const getAnnouncements = () => fetchWithAuth('/api/announcements');
 export const createAnnouncement = (formData) => fetchWithAuthFormData('/api/announcements', formData);
+export const updateAnnouncement = (id, data) => fetchWithAuth(`/api/announcements/${id}`, { 
+    method: 'PUT', 
+    body: JSON.stringify(data), 
+    headers: { 'Content-Type': 'application/json' } 
+});
 export const deleteAnnouncement = (id) => fetchWithAuth(`/api/announcements/${id}`, { method: 'DELETE' });
 
 export const resetGroupPasswords = async (groupName) => {
@@ -96,7 +101,6 @@ export const resetGroupPasswords = async (groupName) => {
 export const getLearnerProfile = (id) => fetchWithAuth(`/api/learners/${id}/profile`);
 
 export const getDebtorsReportCsv = async () => {
-    // ЗАПРОС БЫЛ ИСПРАВЛЕН
     const response = await fetch(`${API_URL}/api/reports/debtors-csv`, {
         headers: { 'Authorization': `Bearer ${state.token}` }
     });
@@ -113,3 +117,15 @@ export const getDebtorsReportCsv = async () => {
     const csvData = await response.text();
     return { csvData, fileName };
 };
+
+export const createMaterialFolder = (data) => fetchWithAuth('/api/materials/folder', {
+    method: 'POST',
+    body: JSON.stringify(data),
+    headers: { 'Content-Type': 'application/json' }
+});
+
+export const deleteMaterialFolder = (folderPath) => fetchWithAuth('/api/materials/folder', {
+    method: 'DELETE',
+    body: JSON.stringify({ folderPath }),
+    headers: { 'Content-Type': 'application/json' }
+});

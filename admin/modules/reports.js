@@ -2,7 +2,6 @@ import { DOMElements } from '../dom.js';
 import * as api from '../api.js';
 import * as ui from '../ui.js';
 
-// Вспомогательная функция для скачивания файла
 function downloadFile(content, fileName, contentType) {
     const a = document.createElement("a");
     const file = new Blob([content], { type: contentType });
@@ -28,7 +27,6 @@ async function handleGenerateDebtorsCsv() {
 }
 
 export function initializeReports() {
-    // Динамически добавляем элементы в DOM, так как они были добавлены в HTML
     DOMElements.reportsBtn = document.getElementById('reports-btn');
     DOMElements.reportsModal = document.getElementById('reports-modal');
     DOMElements.reportsCloseBtn = document.getElementById('reports-close-btn');

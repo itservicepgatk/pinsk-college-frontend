@@ -6,16 +6,19 @@ import { fetchLearners, populateGroupFilter } from './learners.js';
 import { initializeDashboard } from './dashboard.js';
 
 async function deleteGroup(groupName, learnerCount) {
+    const expectedInput = groupName === null ? 'null' : groupName;
+    const displayGroupName = groupName === null ? 'null' : groupName;
+
     const { value: confirmedGroupName } = await Swal.fire({
-        title: `Удаление группы ${groupName}`,
-        html: `Это действие <b>безвозвратно удалит ВСЕХ учащихся (${learnerCount} чел.)</b> из этой группы, а также <b>ВСЕ учебные материалы</b>.<br><br>Для подтверждения введите номер группы: <b>${groupName}</b>`,
+        title: `Удаление группы ${displayGroupName}`,
+        html: `Это действие <b>безвозвратно удалит ВСЕХ учащихся (${learnerCount} чел.)</b> из этой группы, а также <b>ВСЕ учебные материалы</b>.<br><br>Для подтверждения введите номер группы: <b>${displayGroupName}</b>`,
         input: 'text',
-        inputPlaceholder: `Введите ${groupName} для подтверждения`,
+        inputPlaceholder: `Введите ${displayGroupName} для подтверждения`,
         icon: 'warning',
         showCancelButton: true,
         confirmButtonText: 'Я понимаю, удалить',
         cancelButtonText: 'Отмена',
-        inputValidator: (value) => (value !== groupName) ? 'Введенный номер группы не совпадает!' : null,
+        inputValidator: (value) => (value !== expectedInput) ? 'Введенный номер группы не совпадает!' : null,
     });
 
     if (confirmedGroupName) {

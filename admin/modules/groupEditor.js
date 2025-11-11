@@ -4,7 +4,6 @@ import * as ui from '../ui.js';
 import { initializeDashboard } from './dashboard.js';
 import { initializeGroups } from './groups.js';
 
-// Вспомогательная функция для скачивания файла
 function downloadFile(content, fileName, contentType) {
     const a = document.createElement("a");
     const file = new Blob([content], { type: contentType });
@@ -156,7 +155,6 @@ async function copySchedule() {
 }
 
 export function initializeGroupEditor() {
-    // Динамически добавляем кнопку, т.к. она была добавлена в HTML
     DOMElements.resetPasswordsBtn = document.getElementById('reset-passwords-btn');
 
     DOMElements.groupEditorBtn.addEventListener('click', openGroupEditor);

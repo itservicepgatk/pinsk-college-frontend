@@ -1321,3 +1321,119 @@ input:checked + .slider:before {
          grid-template-columns: 1fr;
     }
 }
+.loader-spinner {
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid #5A55E3;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.material-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    border-bottom: 1px solid #EAEAEA;
+    transition: background-color 0.3s;
+}
+
+.material-item:last-child {
+    border-bottom: none;
+}
+
+.material-item .status-icon {
+    font-size: 20px;
+    cursor: help;
+}
+
+/* frontend/admin-style.css */
+
+/* Стили для новой панели управления материалами */
+.material-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+    padding-bottom: 15px;
+    margin-bottom: 15px;
+    border-bottom: 1px solid #EAEAEA;
+    flex-wrap: wrap;
+}
+
+.material-actions {
+    display: flex;
+    gap: 10px;
+}
+
+#material-breadcrumbs {
+    font-weight: 500;
+    color: #4B5563;
+    flex-grow: 1;
+}
+
+#material-breadcrumbs a {
+    text-decoration: none;
+    color: #5A55E3;
+}
+#material-breadcrumbs a:hover {
+    text-decoration: underline;
+}
+#material-breadcrumbs span {
+    margin: 0 5px;
+    color: #8A94A6;
+}
+
+#material-search-input {
+    padding: 8px 12px;
+    border-radius: 6px;
+    border: 1px solid #D1D5DB;
+    font-size: 14px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+#material-search-input:focus {
+    outline: none;
+    border-color: #5A55E3;
+    box-shadow: 0 0 0 3px rgba(90, 85, 227, 0.2);
+}
+
+.material-controls button {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s, opacity 0.2s;
+}
+
+.material-controls button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+#create-folder-btn {
+    background-color: #F3F4F6;
+    color: #374151;
+}
+#create-folder-btn:hover:not(:disabled) {
+    background-color: #E5E7EB;
+}
+
+#upload-file-btn {
+    background-color: #5A55E3;
+    color: white;
+}
+#upload-file-btn:hover:not(:disabled) {
+    background-color: #4A45D1;
+}
