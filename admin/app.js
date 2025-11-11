@@ -16,6 +16,9 @@ import { initializeDebtors } from './modules/debtors.js';
 import { initializeAnnouncements } from './modules/announcements.js';
 import { initializeLearnerProfile } from './modules/learnerProfile.js';
 import { initializeReports } from './modules/reports.js';
+import { initializeBroadcasts } from './modules/broadcasts.js';
+import { initializeTemplates } from './modules/templates.js';
+import { initializeGlobalSearch } from './modules/globalSearch.js';
 
 export function initializeApp() {
     showView('dashboard-container');
@@ -36,7 +39,9 @@ export function initializeApp() {
     initializeAnnouncements();
     initializeLearnerProfile();
     initializeReports();
-
+    initializeBroadcasts();
+    initializeTemplates();
+    initializeGlobalSearch(); 
 }
 
 document.addEventListener('DOMContentLoaded', async () => {

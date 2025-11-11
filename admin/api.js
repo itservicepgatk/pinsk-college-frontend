@@ -49,6 +49,7 @@ export const getDashboardStats = () => fetchWithAuth('/api/stats');
 export const getMaterials = (groupName, path) => fetchWithAuth(`/api/materials?group_name=${groupName}&path=${path}`);
 export const deleteMaterial = (filePath) => fetchWithAuth('/api/materials/delete', { method: 'DELETE', body: JSON.stringify({ filePath }), headers: { 'Content-Type': 'application/json' } });
 export const uploadMaterial = (formData) => fetchWithAuthFormData('/api/materials/upload', formData);
+export const getSignedMaterialUrl = (filePath) => fetchWithAuth(`/api/materials/signed-url?filePath=${encodeURIComponent(filePath)}`);
 
 export const getAuditLogs = (params) => fetchWithAuth(`/api/audit?${params.toString()}`);
 export const getAuditActionTypes = () => fetchWithAuth('/api/audit/actions');
@@ -75,10 +76,10 @@ export const getDebtors = () => fetchWithAuth('/api/learners/debtors');
 
 export const getAnnouncements = () => fetchWithAuth('/api/announcements');
 export const createAnnouncement = (formData) => fetchWithAuthFormData('/api/announcements', formData);
-export const updateAnnouncement = (id, data) => fetchWithAuth(`/api/announcements/${id}`, { 
-    method: 'PUT', 
-    body: JSON.stringify(data), 
-    headers: { 'Content-Type': 'application/json' } 
+export const updateAnnouncement = (id, data) => fetchWithAuth(`/api/announcements/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+    headers: { 'Content-Type': 'application/json' }
 });
 export const deleteAnnouncement = (id) => fetchWithAuth(`/api/announcements/${id}`, { method: 'DELETE' });
 
@@ -109,7 +110,7 @@ export const getDebtorsReportCsv = async () => {
         const errorData = await response.json().catch(() => ({ message: response.statusText }));
         throw new Error(errorData.message);
     }
-    
+
     const disposition = response.headers.get('content-disposition');
     const fileNameMatch = disposition && disposition.match(/filename="(.+?)"/);
     const fileName = fileNameMatch ? fileNameMatch[1] : 'report.csv';
@@ -129,3 +130,10 @@ export const deleteMaterialFolder = (folderPath) => fetchWithAuth('/api/material
     body: JSON.stringify({ folderPath }),
     headers: { 'Content-Type': 'application/json' }
 });
+
+export const getAllTemplates = () => fetchWithAuth('/api/templates');
+export const createTemplate = (data) => fetchWithAuth('/api/templates', { method: 'POST', body: JSON.stringify(data), headers: { 'Content-Type': 'application/json' } });
+export const updateTemplate = (id, data) => fetchWithAuth(`/api/templates/${id}`, { method: 'PUT', body: JSON.stringify(data), headers: { 'Content-Type': 'application/json' } });
+export const deleteTemplate = (id) => fetchWithAuth(`/api/templates/${id}`, { method: 'DELETE' });
+
+export const globalSearch = (term) => fetchWithAuth(`/api/search/global?term=${encodeURIComponent(term)}`);

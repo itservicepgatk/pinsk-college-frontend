@@ -278,41 +278,72 @@ pdfCloseBtn.addEventListener('click', () => {
     pdfModal.classList.add('hidden');
 });
 
+// ЗАМЕНИТЕ ЭТУ ФУНКЦИЮ ПОЛНОСТЬЮ
 async function openPdfViewer(path, name) {
-    pdfTitle.textContent = 'Загрузка...';
-    pdfModal.classList.remove('hidden');
     const token = localStorage.getItem('learnerToken');
     if (!token) {
         Swal.fire('Ошибка', 'Ваша сессия истекла. Пожалуйста, войдите заново.', 'error');
-        pdfModal.classList.add('hidden');
         return;
     }
+
     try {
+        Swal.fire({ title: 'Загрузка файла...', didOpen: () => Swal.showLoading(), allowOutsideClick: false });
+
         const response = await fetch(`${API_URL}/api/learners/material?path=${encodeURIComponent(path)}`, {
-            headers: {
-                Authorization: `Bearer ${token}`
-            },
+            headers: { Authorization: `Bearer ${token}` },
         });
-        if (!response.ok) throw new Error('Не удалось получить доступ к файлу.');
-        const pdfData = await response.arrayBuffer();
-        pdfTitle.textContent = name;
-        const loadingTask = pdfjsLib.getDocument(pdfData);
-        const pdf = await loadingTask.promise;
-        pdfCloseBtn.onclick = () => {
-            pdfModal.classList.add('hidden');
-        };
-        pdfDoc = pdf;
-        pageCountSpan.textContent = pdfDoc.numPages;
-        pageNum = 1;
-        renderPage(pageNum);
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({ message: 'Не удалось получить доступ к файлу.' }));
+            throw new Error(errorData.message);
+        }
+
+        const fileExtension = name.split('.').pop().toLowerCase();
+        Swal.close();
+
+        if (fileExtension === 'pdf') {
+            const pdfData = await response.arrayBuffer();
+            pdfTitle.textContent = name;
+            pdfModal.classList.remove('hidden');
+
+            const loadingTask = pdfjsLib.getDocument(pdfData);
+            const pdf = await loadingTask.promise;
+            pdfDoc = pdf;
+            pageCountSpan.textContent = pdfDoc.numPages;
+            pageNum = 1;
+            renderPage(pageNum);
+        } else if (['png', 'jpg', 'jpeg', 'gif', 'webp'].includes(fileExtension)) {
+            const imageBlob = await response.blob();
+            const imageUrl = URL.createObjectURL(imageBlob);
+            Swal.fire({
+                title: name,
+                imageUrl: imageUrl,
+                imageAlt: name,
+                width: '80vw',
+                willClose: () => {
+                    URL.revokeObjectURL(imageUrl);
+                }
+            });
+        } else {
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url;
+            a.download = name;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            a.remove();
+        }
     } catch (error) {
-        console.error('Ошибка загрузки PDF:', error);
+        Swal.close();
+        console.error('Ошибка загрузки файла:', error);
         Swal.fire({
             icon: 'error',
             title: 'Ошибка',
             text: error.message || 'Не удалось загрузить материал.'
         });
-        pdfModal.classList.add('hidden');
     }
 }
 

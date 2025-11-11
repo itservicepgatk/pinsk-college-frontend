@@ -13,13 +13,17 @@
 <div id="maintenance-banner">
     <strong>Внимание!</strong> На портале ведутся технические работы. Возможны временные ошибки и нестабильная работа.
 </div>
-    
+
     <div id="admin-login-view-container" class="hidden">
     </div>
-    
+
     <div id="dashboard-container" class="hidden">
         <div class="dashboard-header">
             <h1 id="dashboard-title">Группы</h1>
+                <div class="global-search-container">
+        <input type="text" id="global-search-input" placeholder="Поиск по учащимся и группам...">
+        <div id="global-search-results" class="hidden"></div>
+    </div>
             <div>
                 <button id="logout-button">Выйти</button>
             </div>
@@ -42,6 +46,7 @@
                 <button id="group-editor-btn">Редактор группы</button>
                 <button id="material-manager-btn" style="background-color: #ffc107; color: black;">Управление материалами</button>
                 <button id="announcements-btn" style="background-color: #6f42c1; color: white;">Объявления</button>
+                <button id="broadcasts-btn" style="background-color: #fd7e14; color: white;">Рассылки</button>
                 <button id="reports-btn" style="background-color: #0dcaf0; color: black;">Отчеты</button>
                 <button id="manage-admins-btn" class="super-admin-feature hidden" style="background-color: #17a2b8; color: white;">Администраторы</button>
                 <button id="manage-backups-btn" class="super-admin-feature hidden" style="background-color: #343a40; color: white;">Управление бэкапами</button>
@@ -175,11 +180,17 @@
                 <h2>Управление материалами</h2>
                 <button id="material-manager-close-btn" class="close-btn">&times;</button>
             </div>
-            <div class="form-group-modal">
-                <label for="material-group-select">Выберите группу:</label>
-                <select id="material-group-select" required>
-                    <option value="">-- Загрузка... --</option>
-                </select>
+            <div class="tabs" style="margin-bottom: 15px;">
+                <a href="#" class="tab active" id="material-tab-groups">По группам</a>
+                <a href="#" class="tab" id="material-tab-shared">Общие материалы</a>
+            </div>
+            <div id="material-group-selector-container">
+                <div class="form-group-modal">
+                    <label for="material-group-select">Выберите группу:</label>
+                    <select id="material-group-select" required>
+                        <option value="">-- Загрузка... --</option>
+                    </select>
+                </div>
             </div>
             <div id="material-browser" class="hidden">
                 <div class="material-controls">
@@ -396,6 +407,84 @@
             </div>
         </div>
     </div>
+    <div id="broadcasts-modal" class="modal-overlay hidden">
+        <div class="modal-content" style="max-width: 800px;">
+            <div class="modal-header">
+                <h2>Создать рассылку</h2>
+                <button id="broadcasts-close-btn" class="close-btn">&times;</button>
+            </div>
+            <div style="text-align: right; margin-bottom: 15px;">
+                <button id="manage-templates-btn" class="btn-secondary" style="padding: 6px 12px;">Управление шаблонами</button>
+            </div>
+            <form id="broadcast-form">
+                <div class="modal-form-grid">
+                    <div class="form-group-modal grid-col-span-2">
+                        <label for="broadcast-target">Кому отправить:</label>
+                        <select id="broadcast-target" required>
+                            <option value="global">Всем учащимся</option>
+                            <option value="group">Учащимся конкретной группы</option>
+                            <option value="debtors">Всем должникам</option>
+                        </select>
+                    </div>
+                    <div class="form-group-modal grid-col-span-2 hidden" id="broadcast-group-container">
+                        <label for="broadcast-group-select">Выберите группу:</label>
+                        <select id="broadcast-group-select">
+                            <option value="">-- Загрузка... --</option>
+                        </select>
+                    </div>
+                    <div class="form-group-modal grid-col-span-2">
+                        <label for="broadcast-template-select">Шаблон сообщения (необязательно):</label>
+                        <select id="broadcast-template-select">
+                            <option value="">-- Без шаблона --</option>
+                        </select>
+                    </div>
+                    <div class="form-group-modal grid-col-span-2">
+                        <label for="broadcast-title">Заголовок</label>
+                        <input type="text" id="broadcast-title" required>
+                    </div>
+                    <div class="form-group-modal grid-col-span-2">
+                        <label for="broadcast-editor">Текст сообщения</label>
+                        <div id="broadcast-editor"></div>
+                    </div>
+                </div>
+                <div class="modal-buttons">
+                    <button type="submit" class="btn-primary">Отправить рассылку</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div id="template-manager-modal" class="modal-overlay hidden">
+        <div class="modal-content" style="max-width: 900px;">
+            <div class="modal-header">
+                <h2>Управление шаблонами</h2>
+                <button id="template-manager-close-btn" class="close-btn">&times;</button>
+            </div>
+
+            <h4>Создать / Редактировать шаблон</h4>
+            <form id="template-form">
+                <input type="hidden" id="template-id">
+                <div class="modal-form-grid" style="grid-template-columns: 1fr;">
+                    <div class="form-group-modal">
+                        <label for="template-title">Название шаблона</label>
+                        <input type="text" id="template-title" required>
+                    </div>
+                    <div class="form-group-modal">
+                        <label for="template-editor">Содержимое шаблона</label>
+                        <div id="template-editor"></div>
+                    </div>
+                </div>
+                <div class="modal-buttons">
+                    <button type="submit" class="btn-primary">Сохранить шаблон</button>
+                    <button type="button" id="template-form-cancel-btn" class="btn-cancel">Отмена</button>
+                </div>
+            </form>
+
+            <h4 style="margin-top: 30px;">Существующие шаблоны</h4>
+            <div id="templates-list-container" style="max-height: 250px; overflow-y: auto;">
+                <p>Загрузка...</p>
+            </div>
+        </div>
+    </div>
 
     <div id="fab-container">
         <button id="fab-session" class="fab super-admin-feature hidden" title="Сессии пользователей">
@@ -405,7 +494,7 @@
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
         </button>
     </div>
-    
+
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script type="module" src="admin/app.js"></script>
 </body>

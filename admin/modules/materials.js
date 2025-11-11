@@ -9,54 +9,41 @@ let materialsCache = { folders: [], files: [] };
 function getIconForFile(fileName) {
     const extension = fileName.split('.').pop().toLowerCase();
     switch (extension) {
-        // Документы
-        case 'pdf': return '📄'; // PDF
+        case 'pdf': return '📄';
         case 'doc':
-        case 'docx': return '📝'; // Word
+        case 'docx': return '📝';
         case 'txt':
-        case 'md': return '🗒️'; // Текст
-
-        // Таблицы
+        case 'md': return '🗒️';
         case 'xls':
         case 'xlsx':
-        case 'csv': return '📈'; // Excel / CSV
-
-        // Презентации
+        case 'csv': return '📈';
         case 'ppt':
-        case 'pptx': return '📊'; // PowerPoint
-
-        // Изображения
+        case 'pptx': return '📊';
         case 'png':
         case 'jpg':
         case 'jpeg':
         case 'gif':
         case 'webp':
-        case 'svg': return '🖼️'; // Картинки
-
-        // Архивы
+        case 'svg': return '🖼️';
         case 'zip':
         case 'rar':
-        case '7z': return '📦'; // Архивы
-
-        // Аудио и Видео
+        case '7z': return '📦';
         case 'mp3':
-        case 'wav': return '🎵'; // Аудио
+        case 'wav': return '🎵';
         case 'mp4':
         case 'mov':
-        case 'avi': return '🎥'; // Видео
-
-        // Файл по умолчанию
-        default: return '📄'; 
+        case 'avi': return '🎥';
+        default: return '📄';
     }
 }
 
 function updateBreadcrumbs() {
     const breadcrumbsContainer = document.getElementById('material-breadcrumbs');
     breadcrumbsContainer.innerHTML = '';
-    
+
     const rootLink = document.createElement('a');
     rootLink.href = '#';
-    rootLink.textContent = `Группа ${currentGroup}`;
+    rootLink.textContent = currentGroup === '_shared' ? 'Общие материалы' : `Группа ${currentGroup}`;
     rootLink.dataset.path = '';
     breadcrumbsContainer.appendChild(rootLink);
 
@@ -93,7 +80,7 @@ async function renderMaterials() {
 function displayItems(folders, files) {
     const listContainer = document.getElementById('materials-list');
     listContainer.innerHTML = '';
-    
+
     if (folders.length === 0 && files.length === 0) {
         listContainer.innerHTML = '<p>Папка пуста.</p>';
         return;
@@ -116,13 +103,43 @@ function displayItems(folders, files) {
         el.className = 'material-item';
         el.dataset.type = 'file';
         el.dataset.name = file.name;
+        const fileName = file.name;
+        const extension = fileName.split('.').pop().toLowerCase();
+        const isPreviewable = ['pdf', 'png', 'jpg', 'jpeg', 'gif', 'webp'].includes(extension);
+
         el.innerHTML = `
-            <span class="material-name">${getIconForFile(file.name)} ${file.name}</span>
-            <button class="btn-danger btn-delete-item" style="padding: 2px 8px;">Удалить</button>
+            <span class="material-name">${getIconForFile(fileName)} ${fileName}</span>
+            <div>
+                ${isPreviewable ? '<button class="btn-secondary btn-preview-item" style="padding: 2px 8px; margin-right: 5px;">Просмотр</button>' : ''}
+                <button class="btn-danger btn-delete-item" style="padding: 2px 8px;">Удалить</button>
+            </div>
         `;
         listContainer.appendChild(el);
     });
 }
+
+async function previewFile(filePath, fileName) {
+    try {
+        Swal.fire({ title: 'Загрузка файла...', didOpen: () => Swal.showLoading() });
+        const { signedUrl } = await api.getSignedMaterialUrl(filePath);
+        Swal.close();
+
+        const extension = fileName.split('.').pop().toLowerCase();
+        if (['png', 'jpg', 'jpeg', 'gif', 'webp'].includes(extension)) {
+            Swal.fire({
+                title: fileName,
+                imageUrl: signedUrl,
+                imageAlt: fileName,
+                width: '80vw'
+            });
+        } else if (extension === 'pdf') {
+            window.open(signedUrl, '_blank');
+        }
+    } catch (error) {
+        ui.showAlert('error', 'Ошибка предпросмотра', error.message);
+    }
+}
+
 
 async function handleItemClick(e) {
     const target = e.target;
@@ -132,8 +149,12 @@ async function handleItemClick(e) {
     const type = itemEl.dataset.type;
     const name = itemEl.dataset.name;
 
-    if (target.classList.contains('btn-delete-item')) {
-        const fullPath = `dlya-${currentGroup}-gruppy/${currentPath ? currentPath + '/' : ''}${name}`;
+    const basePath = currentGroup === '_shared' ? 'shared-materials' : `dlya-${currentGroup}-gruppy`;
+    const fullPath = `${basePath}/${currentPath ? currentPath + '/' : ''}${name}`;
+
+    if (target.classList.contains('btn-preview-item')) {
+        previewFile(fullPath, name);
+    } else if (target.classList.contains('btn-delete-item')) {
         if (type === 'folder') {
             if (await ui.showConfirm(`Удалить папку "${name}"?`, 'Все содержимое папки будет безвозвратно удалено!')) {
                 try {
@@ -215,7 +236,7 @@ async function handleFileUpload(event) {
         formData.append('group_name', currentGroup);
         formData.append('path', currentPath);
         formData.append('materialFile', file);
-        
+
         try {
             await api.uploadMaterial(formData);
             successCount++;
@@ -228,7 +249,7 @@ async function handleFileUpload(event) {
             }
         }
     }
-    
+
     if (successCount > 0) {
         ui.showAlert('success', 'Загрузка завершена', `Успешно загружено файлов: ${successCount} из ${files.length}`);
     } else {
@@ -255,10 +276,16 @@ export function initializeMaterials() {
     const modal = DOMElements.materialManagerModal;
     const groupSelect = document.getElementById('material-group-select');
     const browser = document.getElementById('material-browser');
-    
+    const tabGroups = document.getElementById('material-tab-groups');
+    const tabShared = document.getElementById('material-tab-shared');
+    const groupSelectorContainer = document.getElementById('material-group-selector-container');
+
     DOMElements.materialManagerBtn.addEventListener('click', async () => {
         modal.classList.remove('hidden');
         browser.classList.add('hidden');
+        groupSelectorContainer.style.display = 'block';
+        tabGroups.classList.add('active');
+        tabShared.classList.remove('active');
         groupSelect.innerHTML = '<option value="">-- Загрузка... --</option>';
         try {
             const groups = await api.getGroups();
@@ -278,6 +305,26 @@ export function initializeMaterials() {
 
     DOMElements.materialManagerCloseBtn.addEventListener('click', () => modal.classList.add('hidden'));
 
+    tabGroups.addEventListener('click', (e) => {
+        e.preventDefault();
+        tabGroups.classList.add('active');
+        tabShared.classList.remove('active');
+        groupSelectorContainer.style.display = 'block';
+        browser.classList.add('hidden');
+        groupSelect.value = '';
+    });
+
+    tabShared.addEventListener('click', (e) => {
+        e.preventDefault();
+        tabShared.classList.add('active');
+        tabGroups.classList.remove('active');
+        groupSelectorContainer.style.display = 'none';
+        browser.classList.remove('hidden');
+        currentGroup = '_shared';
+        currentPath = '';
+        renderMaterials();
+    });
+
     groupSelect.addEventListener('change', () => {
         currentGroup = groupSelect.value;
         currentPath = '';
@@ -288,7 +335,7 @@ export function initializeMaterials() {
             browser.classList.add('hidden');
         }
     });
-    
+
     document.getElementById('materials-list').addEventListener('click', handleItemClick);
     document.getElementById('material-breadcrumbs').addEventListener('click', handleBreadcrumbClick);
     document.getElementById('create-folder-btn').addEventListener('click', handleCreateFolder);
