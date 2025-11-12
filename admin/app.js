@@ -19,6 +19,7 @@ import { initializeReports } from './modules/reports.js';
 import { initializeBroadcasts } from './modules/broadcasts.js';
 import { initializeTemplates } from './modules/templates.js';
 import { initializeGlobalSearch } from './modules/globalSearch.js';
+import { initializeTrash } from './modules/trash.js';
 
 export function initializeApp() {
     showView('dashboard-container');
@@ -42,6 +43,7 @@ export function initializeApp() {
     initializeBroadcasts();
     initializeTemplates();
     initializeGlobalSearch(); 
+    initializeTrash();
 }
 
 document.addEventListener('DOMContentLoaded', async () => {

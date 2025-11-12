@@ -1510,3 +1510,71 @@ input:checked + .slider:before {
     text-align: center;
     color: #6B7280;
 }
+
+#drop-zone {
+    border: 2px dashed #D1D5DB;
+    border-radius: 8px;
+    padding: 20px;
+    text-align: center;
+    color: #6B7280;
+    transition: border-color 0.3s, background-color 0.3s;
+    margin-top: 15px;
+}
+
+#drop-zone.dragover {
+    border-color: #5A55E3;
+    background-color: #f0f0ff;
+}
+
+#drop-zone p {
+    margin: 0 0 15px 0;
+    pointer-events: none;
+}
+
+#materials-list {
+    border: none;
+    padding: 0;
+}
+
+#upload-progress-container {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 15px;
+}
+
+.progress-bar-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
+}
+
+.progress-bar-item .file-name {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex-shrink: 1;
+    min-width: 100px;
+}
+
+.progress-bar-item .progress-bar-bg {
+    flex-grow: 1;
+    height: 10px;
+    background-color: #E5E7EB;
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+.progress-bar-item .progress-bar-fg {
+    height: 100%;
+    width: 0;
+    background-color: #5A55E3;
+    border-radius: 5px;
+    transition: width 0.2s ease-out;
+}
+
+.progress-bar-item .progress-status {
+    width: 60px;
+    text-align: right;
+}

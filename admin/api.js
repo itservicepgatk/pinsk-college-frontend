@@ -48,8 +48,43 @@ export const deleteGroup = (groupName) => fetchWithAuth(`/api/learners/groups/${
 export const getDashboardStats = () => fetchWithAuth('/api/stats');
 export const getMaterials = (groupName, path) => fetchWithAuth(`/api/materials?group_name=${groupName}&path=${path}`);
 export const deleteMaterial = (filePath) => fetchWithAuth('/api/materials/delete', { method: 'DELETE', body: JSON.stringify({ filePath }), headers: { 'Content-Type': 'application/json' } });
-export const uploadMaterial = (formData) => fetchWithAuthFormData('/api/materials/upload', formData);
 export const getSignedMaterialUrl = (filePath) => fetchWithAuth(`/api/materials/signed-url?filePath=${encodeURIComponent(filePath)}`);
+
+export const uploadMaterialWithProgress = (formData, progressCallback) => {
+    return new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', `${API_URL}/api/materials/upload`, true);
+
+        if (state.token) {
+            xhr.setRequestHeader('Authorization', `Bearer ${state.token}`);
+        }
+
+        xhr.upload.addEventListener('progress', (event) => {
+            if (event.lengthComputable) {
+                progressCallback(event);
+            }
+        });
+
+        xhr.addEventListener('load', () => {
+            if (xhr.status >= 200 && xhr.status < 300) {
+                resolve(JSON.parse(xhr.responseText));
+            } else {
+                let error;
+                try {
+                    error = JSON.parse(xhr.responseText);
+                } catch (e) {
+                    error = { message: xhr.statusText };
+                }
+                reject(new Error(error.message));
+            }
+        });
+
+        xhr.addEventListener('error', () => reject(new Error('Network error during upload.')));
+        xhr.addEventListener('abort', () => reject(new Error('Upload aborted.')));
+
+        xhr.send(formData);
+    });
+};
 
 export const getAuditLogs = (params) => fetchWithAuth(`/api/audit?${params.toString()}`);
 export const getAuditActionTypes = () => fetchWithAuth('/api/audit/actions');
@@ -137,3 +172,7 @@ export const updateTemplate = (id, data) => fetchWithAuth(`/api/templates/${id}`
 export const deleteTemplate = (id) => fetchWithAuth(`/api/templates/${id}`, { method: 'DELETE' });
 
 export const globalSearch = (term) => fetchWithAuth(`/api/search/global?term=${encodeURIComponent(term)}`);
+
+export const getTrashItems = () => fetchWithAuth('/api/trash');
+export const restoreTrashItem = (type, id) => fetchWithAuth('/api/trash/restore', { method: 'POST', body: JSON.stringify({ type, id }), headers: { 'Content-Type': 'application/json' } });
+export const permanentlyDeleteTrashItem = (type, id) => fetchWithAuth('/api/trash/delete-permanent', { method: 'POST', body: JSON.stringify({ type, id }), headers: { 'Content-Type': 'application/json' } });

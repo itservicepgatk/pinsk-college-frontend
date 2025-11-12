@@ -10,29 +10,14 @@ function getIconForFile(fileName) {
     const extension = fileName.split('.').pop().toLowerCase();
     switch (extension) {
         case 'pdf': return '📄';
-        case 'doc':
-        case 'docx': return '📝';
-        case 'txt':
-        case 'md': return '🗒️';
-        case 'xls':
-        case 'xlsx':
-        case 'csv': return '📈';
-        case 'ppt':
-        case 'pptx': return '📊';
-        case 'png':
-        case 'jpg':
-        case 'jpeg':
-        case 'gif':
-        case 'webp':
-        case 'svg': return '🖼️';
-        case 'zip':
-        case 'rar':
-        case '7z': return '📦';
-        case 'mp3':
-        case 'wav': return '🎵';
-        case 'mp4':
-        case 'mov':
-        case 'avi': return '🎥';
+        case 'doc': case 'docx': return '📝';
+        case 'txt': case 'md': return '🗒️';
+        case 'xls': case 'xlsx': case 'csv': return '📈';
+        case 'ppt': case 'pptx': return '📊';
+        case 'png': case 'jpg': case 'jpeg': case 'gif': case 'webp': case 'svg': return '🖼️';
+        case 'zip': case 'rar': case '7z': return '📦';
+        case 'mp3': case 'wav': return '🎵';
+        case 'mp4': case 'mov': case 'avi': return '🎥';
         default: return '📄';
     }
 }
@@ -40,20 +25,17 @@ function getIconForFile(fileName) {
 function updateBreadcrumbs() {
     const breadcrumbsContainer = document.getElementById('material-breadcrumbs');
     breadcrumbsContainer.innerHTML = '';
-
     const rootLink = document.createElement('a');
     rootLink.href = '#';
     rootLink.textContent = currentGroup === '_shared' ? 'Общие материалы' : `Группа ${currentGroup}`;
     rootLink.dataset.path = '';
     breadcrumbsContainer.appendChild(rootLink);
-
     let pathAccumulator = '';
     currentPath.split('/').filter(p => p).forEach(part => {
         pathAccumulator += (pathAccumulator ? '/' : '') + part;
         const separator = document.createElement('span');
         separator.textContent = ' / ';
         breadcrumbsContainer.appendChild(separator);
-
         const partLink = document.createElement('a');
         partLink.href = '#';
         partLink.textContent = part;
@@ -67,7 +49,6 @@ async function renderMaterials() {
     listContainer.innerHTML = '<p>Загрузка...</p>';
     updateBreadcrumbs();
     document.getElementById('material-search-input').value = '';
-
     try {
         const data = await api.getMaterials(currentGroup, currentPath);
         materialsCache = data;
@@ -80,12 +61,10 @@ async function renderMaterials() {
 function displayItems(folders, files) {
     const listContainer = document.getElementById('materials-list');
     listContainer.innerHTML = '';
-
     if (folders.length === 0 && files.length === 0) {
-        listContainer.innerHTML = '<p>Папка пуста.</p>';
+        // Не показываем "Папка пуста", т.к. текст есть в drop-zone
         return;
     }
-
     folders.forEach(folderName => {
         const el = document.createElement('div');
         el.className = 'material-item';
@@ -97,18 +76,15 @@ function displayItems(folders, files) {
         `;
         listContainer.appendChild(el);
     });
-
     files.forEach(file => {
         const el = document.createElement('div');
         el.className = 'material-item';
         el.dataset.type = 'file';
         el.dataset.name = file.name;
-        const fileName = file.name;
-        const extension = fileName.split('.').pop().toLowerCase();
+        const extension = file.name.split('.').pop().toLowerCase();
         const isPreviewable = ['pdf', 'png', 'jpg', 'jpeg', 'gif', 'webp'].includes(extension);
-
         el.innerHTML = `
-            <span class="material-name">${getIconForFile(fileName)} ${fileName}</span>
+            <span class="material-name">${getIconForFile(file.name)} ${file.name}</span>
             <div>
                 ${isPreviewable ? '<button class="btn-secondary btn-preview-item" style="padding: 2px 8px; margin-right: 5px;">Просмотр</button>' : ''}
                 <button class="btn-danger btn-delete-item" style="padding: 2px 8px;">Удалить</button>
@@ -123,15 +99,9 @@ async function previewFile(filePath, fileName) {
         Swal.fire({ title: 'Загрузка файла...', didOpen: () => Swal.showLoading() });
         const { signedUrl } = await api.getSignedMaterialUrl(filePath);
         Swal.close();
-
         const extension = fileName.split('.').pop().toLowerCase();
         if (['png', 'jpg', 'jpeg', 'gif', 'webp'].includes(extension)) {
-            Swal.fire({
-                title: fileName,
-                imageUrl: signedUrl,
-                imageAlt: fileName,
-                width: '80vw'
-            });
+            Swal.fire({ title: fileName, imageUrl: signedUrl, imageAlt: fileName, width: '80vw' });
         } else if (extension === 'pdf') {
             window.open(signedUrl, '_blank');
         }
@@ -140,18 +110,14 @@ async function previewFile(filePath, fileName) {
     }
 }
 
-
 async function handleItemClick(e) {
     const target = e.target;
     const itemEl = target.closest('.material-item');
     if (!itemEl) return;
-
     const type = itemEl.dataset.type;
     const name = itemEl.dataset.name;
-
     const basePath = currentGroup === '_shared' ? 'shared-materials' : `dlya-${currentGroup}-gruppy`;
     const fullPath = `${basePath}/${currentPath ? currentPath + '/' : ''}${name}`;
-
     if (target.classList.contains('btn-preview-item')) {
         previewFile(fullPath, name);
     } else if (target.classList.contains('btn-delete-item')) {
@@ -185,14 +151,7 @@ async function handleBreadcrumbClick(e) {
 }
 
 async function handleCreateFolder() {
-    const { value: folderName } = await Swal.fire({
-        title: 'Создание новой папки',
-        input: 'text',
-        inputPlaceholder: 'Имя папки',
-        showCancelButton: true,
-        inputValidator: (value) => !value && 'Имя папки не может быть пустым!',
-    });
-
+    const { value: folderName } = await Swal.fire({ title: 'Создание новой папки', input: 'text', inputPlaceholder: 'Имя папки', showCancelButton: true, inputValidator: (value) => !value && 'Имя папки не может быть пустым!' });
     if (folderName) {
         try {
             await api.createMaterialFolder({ group_name: currentGroup, path: currentPath, folderName });
@@ -203,66 +162,55 @@ async function handleCreateFolder() {
     }
 }
 
-async function handleFileUpload(event) {
-    const files = event.target.files;
-    if (files.length === 0) return;
-
-    const uploadBtn = document.getElementById('upload-file-btn');
-    const createFolderBtn = document.getElementById('create-folder-btn');
-    uploadBtn.disabled = true;
-    createFolderBtn.disabled = true;
-
-    const listContainer = document.getElementById('materials-list');
-
-    if (listContainer.querySelector('p')) {
-        listContainer.innerHTML = '';
-    }
+function uploadFiles(files) {
+    const progressContainer = document.getElementById('upload-progress-container');
+    progressContainer.innerHTML = '';
+    const uploadPromises = [];
 
     for (const file of files) {
-        const placeholder = document.createElement('div');
-        placeholder.className = 'material-item';
-        placeholder.dataset.filename = file.name;
-        placeholder.innerHTML = `
-            <span>${getIconForFile(file.name)} ${file.name}</span>
-            <div class="loader-spinner"></div>
+        const progressId = `progress-${Math.random().toString(36).substr(2, 9)}`;
+        const progressItem = document.createElement('div');
+        progressItem.className = 'progress-bar-item';
+        progressItem.id = progressId;
+        progressItem.innerHTML = `
+            <span class="file-name">${file.name}</span>
+            <div class="progress-bar-bg">
+                <div class="progress-bar-fg"></div>
+            </div>
+            <span class="progress-status">0%</span>
         `;
-        listContainer.prepend(placeholder);
-    }
+        progressContainer.appendChild(progressItem);
 
-    let successCount = 0;
-    for (const file of files) {
-        const placeholder = listContainer.querySelector(`[data-filename="${file.name}"]`);
         const formData = new FormData();
         formData.append('group_name', currentGroup);
         formData.append('path', currentPath);
         formData.append('materialFile', file);
 
-        try {
-            await api.uploadMaterial(formData);
-            successCount++;
-            if (placeholder) {
-                placeholder.querySelector('.loader-spinner').outerHTML = '<span class="status-icon">✅</span>';
+        const uploadPromise = api.uploadMaterialWithProgress(formData, (event) => {
+            const percent = Math.round((event.loaded / event.total) * 100);
+            const progressBar = document.querySelector(`#${progressId} .progress-bar-fg`);
+            const progressStatus = document.querySelector(`#${progressId} .progress-status`);
+            if (progressBar) progressBar.style.width = `${percent}%`;
+            if (progressStatus) progressStatus.textContent = `${percent}%`;
+        }).then(() => {
+            const progressStatus = document.querySelector(`#${progressId} .progress-status`);
+            if (progressStatus) progressStatus.textContent = '✅';
+        }).catch((error) => {
+            const progressStatus = document.querySelector(`#${progressId} .progress-status`);
+            if (progressStatus) {
+                progressStatus.textContent = '❌';
+                progressStatus.title = error.message;
             }
-        } catch (error) {
-            if (placeholder) {
-                placeholder.querySelector('.loader-spinner').outerHTML = `<span class="status-icon" title="${error.message}">❌</span>`;
-            }
-        }
+        });
+        uploadPromises.push(uploadPromise);
     }
 
-    if (successCount > 0) {
-        ui.showAlert('success', 'Загрузка завершена', `Успешно загружено файлов: ${successCount} из ${files.length}`);
-    } else {
-        ui.showAlert('error', 'Загрузка не удалась', 'Не удалось загрузить ни одного файла.');
-    }
-
-    setTimeout(() => {
-        renderMaterials();
-        uploadBtn.disabled = false;
-        createFolderBtn.disabled = false;
-    }, 2000);
-
-    event.target.value = '';
+    Promise.allSettled(uploadPromises).then(() => {
+        setTimeout(() => {
+            progressContainer.innerHTML = '';
+            renderMaterials();
+        }, 3000);
+    });
 }
 
 function handleSearch(e) {
@@ -279,6 +227,8 @@ export function initializeMaterials() {
     const tabGroups = document.getElementById('material-tab-groups');
     const tabShared = document.getElementById('material-tab-shared');
     const groupSelectorContainer = document.getElementById('material-group-selector-container');
+    const dropZone = document.getElementById('drop-zone');
+    const fileInput = document.getElementById('material-file-input-hidden');
 
     DOMElements.materialManagerBtn.addEventListener('click', async () => {
         modal.classList.remove('hidden');
@@ -336,10 +286,29 @@ export function initializeMaterials() {
         }
     });
 
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, e => {
+            e.preventDefault();
+            e.stopPropagation();
+        });
+    });
+
+    ['dragenter', 'dragover'].forEach(eventName => {
+        dropZone.addEventListener(eventName, () => dropZone.classList.add('dragover'));
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, () => dropZone.classList.remove('dragover'));
+    });
+
+    dropZone.addEventListener('drop', (e) => {
+        uploadFiles(e.dataTransfer.files);
+    });
+
     document.getElementById('materials-list').addEventListener('click', handleItemClick);
     document.getElementById('material-breadcrumbs').addEventListener('click', handleBreadcrumbClick);
     document.getElementById('create-folder-btn').addEventListener('click', handleCreateFolder);
-    document.getElementById('upload-file-btn').addEventListener('click', () => document.getElementById('material-file-input-hidden').click());
-    document.getElementById('material-file-input-hidden').addEventListener('change', handleFileUpload);
+    document.getElementById('upload-file-btn').addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', (e) => uploadFiles(e.target.files));
     document.getElementById('material-search-input').addEventListener('input', handleSearch);
 }

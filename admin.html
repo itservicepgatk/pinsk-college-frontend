@@ -20,10 +20,10 @@
     <div id="dashboard-container" class="hidden">
         <div class="dashboard-header">
             <h1 id="dashboard-title">Группы</h1>
-                <div class="global-search-container">
-        <input type="text" id="global-search-input" placeholder="Поиск по учащимся и группам...">
-        <div id="global-search-results" class="hidden"></div>
-    </div>
+            <div class="global-search-container">
+                <input type="text" id="global-search-input" placeholder="Поиск по учащимся и группам...">
+                <div id="global-search-results" class="hidden"></div>
+            </div>
             <div>
                 <button id="logout-button">Выйти</button>
             </div>
@@ -48,6 +48,7 @@
                 <button id="announcements-btn" style="background-color: #6f42c1; color: white;">Объявления</button>
                 <button id="broadcasts-btn" style="background-color: #fd7e14; color: white;">Рассылки</button>
                 <button id="reports-btn" style="background-color: #0dcaf0; color: black;">Отчеты</button>
+                <button id="trash-btn" style="background-color: #dc3545; color: white;">Корзина</button>
                 <button id="manage-admins-btn" class="super-admin-feature hidden" style="background-color: #17a2b8; color: white;">Администраторы</button>
                 <button id="manage-backups-btn" class="super-admin-feature hidden" style="background-color: #343a40; color: white;">Управление бэкапами</button>
                 <div class="super-admin-feature hidden" id="maintenance-mode-container">
@@ -208,8 +209,11 @@
                         <input type="file" id="material-file-input-hidden" class="hidden" multiple>
                     </div>
                 </div>
-                <div id="materials-list" style="max-height: 400px; overflow-y: auto; border: 1px solid #eee; padding: 10px; border-radius: 6px;">
-                    <p>Выберите группу для просмотра материалов.</p>
+                <div id="upload-progress-container"></div>
+                <div id="drop-zone">
+                    <p>Перетащите файлы сюда или нажмите "Загрузить файл"</p>
+                    <div id="materials-list" style="max-height: 350px; overflow-y: auto;">
+                    </div>
                 </div>
             </div>
         </div>
@@ -459,7 +463,6 @@
                 <h2>Управление шаблонами</h2>
                 <button id="template-manager-close-btn" class="close-btn">&times;</button>
             </div>
-
             <h4>Создать / Редактировать шаблон</h4>
             <form id="template-form">
                 <input type="hidden" id="template-id">
@@ -478,10 +481,25 @@
                     <button type="button" id="template-form-cancel-btn" class="btn-cancel">Отмена</button>
                 </div>
             </form>
-
             <h4 style="margin-top: 30px;">Существующие шаблоны</h4>
             <div id="templates-list-container" style="max-height: 250px; overflow-y: auto;">
                 <p>Загрузка...</p>
+            </div>
+        </div>
+    </div>
+    <div id="trash-modal" class="modal-overlay hidden">
+        <div class="modal-content" style="max-width: 1000px;">
+            <div class="modal-header">
+                <h2>Корзина</h2>
+                <button id="trash-close-btn" class="close-btn">&times;</button>
+            </div>
+            <div class="profile-tabs">
+                <button class="tab-link active" data-tab="trash-learners">Учащиеся</button>
+                <button class="tab-link" data-tab="trash-materials">Материалы</button>
+            </div>
+            <div id="trash-learners" class="profile-tab-content active">
+            </div>
+            <div id="trash-materials" class="profile-tab-content">
             </div>
         </div>
     </div>
