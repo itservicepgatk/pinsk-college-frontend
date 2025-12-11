@@ -20,6 +20,7 @@ function renderGeneralTab(learner) {
         </div>
     `;
     document.getElementById('profile-edit-btn').addEventListener('click', () => {
+        document.getElementById('learner-profile-modal').classList.add('hidden');
         openLearnerModal('edit', learner.id);
     });
 }

@@ -166,6 +166,12 @@ export const deleteMaterialFolder = (folderPath) => fetchWithAuth('/api/material
     headers: { 'Content-Type': 'application/json' }
 });
 
+export const transferMaterial = (filePath, targetGroup, action) => fetchWithAuth('/api/materials/transfer', {
+    method: 'POST',
+    body: JSON.stringify({ filePath, targetGroup, action }),
+    headers: { 'Content-Type': 'application/json' }
+});
+
 export const getAllTemplates = () => fetchWithAuth('/api/templates');
 export const createTemplate = (data) => fetchWithAuth('/api/templates', { method: 'POST', body: JSON.stringify(data), headers: { 'Content-Type': 'application/json' } });
 export const updateTemplate = (id, data) => fetchWithAuth(`/api/templates/${id}`, { method: 'PUT', body: JSON.stringify(data), headers: { 'Content-Type': 'application/json' } });
@@ -176,3 +182,15 @@ export const globalSearch = (term) => fetchWithAuth(`/api/search/global?term=${e
 export const getTrashItems = () => fetchWithAuth('/api/trash');
 export const restoreTrashItem = (type, id) => fetchWithAuth('/api/trash/restore', { method: 'POST', body: JSON.stringify({ type, id }), headers: { 'Content-Type': 'application/json' } });
 export const permanentlyDeleteTrashItem = (type, id) => fetchWithAuth('/api/trash/delete-permanent', { method: 'POST', body: JSON.stringify({ type, id }), headers: { 'Content-Type': 'application/json' } });
+
+export const deleteTrashItems = (type, ids) => fetchWithAuth('/api/trash/delete-multiple', { 
+    method: 'POST', 
+    body: JSON.stringify({ type, ids }), 
+    headers: { 'Content-Type': 'application/json' } 
+});
+
+export const emptyTrash = (type) => fetchWithAuth('/api/trash/empty', { 
+    method: 'POST', 
+    body: JSON.stringify({ type }), 
+    headers: { 'Content-Type': 'application/json' } 
+});

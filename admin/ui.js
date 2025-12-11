@@ -64,3 +64,19 @@ export function toggleSuperAdminFeatures(userRole) {
     const isSuperAdmin = userRole === 'superadmin';
     superAdminElements.forEach(el => el.classList.toggle('hidden', !isSuperAdmin));
 }
+
+export function showLoading() {
+    Swal.fire({
+        title: 'Подождите...',
+        didOpen: () => {
+            Swal.showLoading();
+        },
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        showConfirmButton: false
+    });
+}
+
+export function closeLoading() {
+    Swal.close();
+}

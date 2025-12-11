@@ -204,10 +204,11 @@ export async function fetchLearners() {
             sortDir: state.currentSort.direction,
         });
         const groupToSearch = DOMElements.groupFilterSelect.value || state.currentGroupName;
-
-        if (groupToSearch || groupToSearch === null) {
-            const paramValue = groupToSearch === null ? 'null' : groupToSearch;
-            params.append('searchGroup', paramValue);
+            if (groupToSearch && groupToSearch !== '') {
+             params.append('searchGroup', groupToSearch);
+            }
+        else if (groupToSearch === null) {
+             params.append('searchGroup', 'null');
         }
 
         if (state.currentSearchName) params.append('searchName', state.currentSearchName);
@@ -353,12 +354,15 @@ export function initializeLearners() {
                 direction: 'asc'
             },
             currentPage: 1,
-            currentGroupName: null
+            currentGroupName: ''
         });
         DOMElements.searchInput.value = '';
-        DOMElements.groupFilterSelect.value = '';
+        DOMElements.groupFilterSelect.value = ''; 
+
         ui.showLearnersView('Все');
-        populateGroupFilter();
+        populateGroupFilter().then(() => {
+             DOMElements.groupFilterSelect.value = ''; 
+        });
         fetchLearners();
     });
 

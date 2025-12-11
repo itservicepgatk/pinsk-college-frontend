@@ -83,15 +83,72 @@ function displayItems(folders, files) {
         el.dataset.name = file.name;
         const extension = file.name.split('.').pop().toLowerCase();
         const isPreviewable = ['pdf', 'png', 'jpg', 'jpeg', 'gif', 'webp'].includes(extension);
+        
+        // Добавили кнопку "Действия" (⚙️)
         el.innerHTML = `
             <span class="material-name">${getIconForFile(file.name)} ${file.name}</span>
             <div>
                 ${isPreviewable ? '<button class="btn-secondary btn-preview-item" style="padding: 2px 8px; margin-right: 5px;">Просмотр</button>' : ''}
+                <button class="btn-secondary btn-actions-item" style="padding: 2px 8px; margin-right: 5px; background-color: #17a2b8; color: white;">⚙️</button>
                 <button class="btn-danger btn-delete-item" style="padding: 2px 8px;">Удалить</button>
             </div>
         `;
         listContainer.appendChild(el);
     });
+}
+
+async function handleTransfer(fileName, filePath) {
+    // Получаем список групп для выпадающего списка
+    let groups = {};
+    try {
+        const groupsData = await api.getGroups();
+        groupsData.forEach(g => groups[g.group_name] = `Группа ${g.group_name}`);
+        groups['_shared'] = 'Общие материалы'; // Добавляем опцию общих материалов
+    } catch (e) {
+        console.error(e);
+        return ui.showAlert('error', 'Ошибка', 'Не удалось загрузить список групп');
+    }
+
+    // 1. Спрашиваем действие (Копировать или Переместить)
+    const { value: action } = await Swal.fire({
+        title: `Действия с файлом "${fileName}"`,
+        input: 'radio',
+        inputOptions: {
+            'copy': 'Копировать (дублировать)',
+            'move': 'Переместить'
+        },
+        inputValue: 'copy',
+        showCancelButton: true,
+        confirmButtonText: 'Далее'
+    });
+
+    if (!action) return;
+
+    // 2. Спрашиваем целевую группу
+    const { value: targetGroup } = await Swal.fire({
+        title: action === 'move' ? 'Куда переместить?' : 'Куда скопировать?',
+        input: 'select',
+        inputOptions: groups,
+        inputPlaceholder: 'Выберите группу',
+        showCancelButton: true,
+        confirmButtonText: 'Выполнить',
+        inputValidator: (value) => {
+            if (!value) return 'Нужно выбрать группу!';
+        }
+    });
+
+    if (targetGroup) {
+        try {
+            ui.showLoading();
+            const res = await api.transferMaterial(filePath, targetGroup, action);
+            ui.closeLoading();
+            ui.showAlert('success', 'Успех', res.message);
+            renderMaterials(); // Обновляем список
+        } catch (error) {
+            ui.closeLoading();
+            ui.showAlert('error', 'Ошибка', error.message);
+        }
+    }
 }
 
 async function previewFile(filePath, fileName) {
@@ -118,11 +175,14 @@ async function handleItemClick(e) {
     const name = itemEl.dataset.name;
     const basePath = currentGroup === '_shared' ? 'shared-materials' : `dlya-${currentGroup}-gruppy`;
     const fullPath = `${basePath}/${currentPath ? currentPath + '/' : ''}${name}`;
+
     if (target.classList.contains('btn-preview-item')) {
         previewFile(fullPath, name);
+    } else if (target.classList.contains('btn-actions-item')) {
+        handleTransfer(name, fullPath); 
     } else if (target.classList.contains('btn-delete-item')) {
         if (type === 'folder') {
-            if (await ui.showConfirm(`Удалить папку "${name}"?`, 'Все содержимое папки будет безвозвратно удалено!')) {
+             if (await ui.showConfirm(`Удалить папку "${name}"?`, 'Все содержимое папки будет безвозвратно удалено!')) {
                 try {
                     await api.deleteMaterialFolder(fullPath);
                     renderMaterials();
@@ -136,7 +196,8 @@ async function handleItemClick(e) {
                 } catch (error) { ui.showAlert('error', 'Ошибка', error.message); }
             }
         }
-    } else if (target.classList.contains('material-name') && type === 'folder') {
+    }
+    else if (target.classList.contains('material-name') && type === 'folder') {
         currentPath = currentPath ? `${currentPath}/${name}` : name;
         renderMaterials();
     }

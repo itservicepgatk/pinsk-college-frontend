@@ -278,7 +278,6 @@ pdfCloseBtn.addEventListener('click', () => {
     pdfModal.classList.add('hidden');
 });
 
-// ЗАМЕНИТЕ ЭТУ ФУНКЦИЮ ПОЛНОСТЬЮ
 async function openPdfViewer(path, name) {
     const token = localStorage.getItem('learnerToken');
     if (!token) {
