@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Портал колледжа - Администратор</title>
     <link rel="icon" type="image/x-icon" href="assets/images/favicon.ico">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="admin-style.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.tiny.cloud/1/d08f0zn1o7mnowm67s6zk1k8424cke1ceh6k22e5lj48i799/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
@@ -41,18 +42,47 @@
             </div>
         </div>
         <div id="groups-view">
-            <div class="main-actions" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
-                <button id="all-learners-btn">Показать всех учащихся</button>
-                <button id="group-editor-btn">Редактор группы</button>
-                <button id="material-manager-btn" style="background-color: #ffc107; color: black;">Управление материалами</button>
-                <button id="announcements-btn" style="background-color: #6f42c1; color: white;">Объявления</button>
-                <button id="broadcasts-btn" style="background-color: #fd7e14; color: white;">Рассылки</button>
-                <button id="reports-btn" style="background-color: #0dcaf0; color: black;">Отчеты</button>
-                <button id="trash-btn" style="background-color: #dc3545; color: white;">Корзина</button>
-                <button id="manage-admins-btn" class="super-admin-feature hidden" style="background-color: #17a2b8; color: white;">Администраторы</button>
-                <button id="manage-backups-btn" class="super-admin-feature hidden" style="background-color: #343a40; color: white;">Управление бэкапами</button>
+            <div class="main-actions" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));">
+                <button id="all-learners-btn">
+                    <i class="fa-solid fa-users"></i> Все учащиеся
+                </button>
+                
+                <button id="group-editor-btn">
+                    <i class="fa-solid fa-pen-to-square"></i> Редактор группы
+                </button>
+                
+                <button id="material-manager-btn" style="background-color: #ffc107; color: black;">
+                    <i class="fa-solid fa-folder-open"></i> Материалы
+                </button>
+                
+                <button id="announcements-btn" style="background-color: #6f42c1; color: white;">
+                    <i class="fa-solid fa-bullhorn"></i> Объявления
+                </button>
+                
+                <button id="broadcasts-btn" style="background-color: #fd7e14; color: white;">
+                    <i class="fa-solid fa-paper-plane"></i> Рассылки
+                </button>
+                
+                <button id="reports-btn" style="background-color: #0dcaf0; color: black;">
+                    <i class="fa-solid fa-file-contract"></i> Отчеты
+                </button>
+                
+                <button id="trash-btn" style="background-color: #dc3545; color: white;">
+                    <i class="fa-solid fa-trash-can"></i> Корзина
+                </button>
+                
+                <button id="manage-admins-btn" class="super-admin-feature hidden" style="background-color: #17a2b8; color: white;">
+                    <i class="fa-solid fa-user-shield"></i> Администраторы
+                </button>
+                
+                <button id="manage-backups-btn" class="super-admin-feature hidden" style="background-color: #343a40; color: white;">
+                    <i class="fa-solid fa-database"></i> Бэкапы
+                </button>
+                
                 <div class="super-admin-feature hidden" id="maintenance-mode-container">
-                    <label for="maintenance-toggle" class="maintenance-label">Режим тестирования</label>
+                    <label for="maintenance-toggle" class="maintenance-label">
+                        <i class="fa-solid fa-screwdriver-wrench"></i> Тест. режим
+                    </label>
                     <label class="switch">
                         <input type="checkbox" id="maintenance-toggle">
                         <span class="slider round"></span>

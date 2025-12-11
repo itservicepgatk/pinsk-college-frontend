@@ -302,7 +302,19 @@ button[type="submit"]:hover {
     border: none;
     border-radius: 8px;
     cursor: pointer;
-    transition: opacity 0.2s;
+    transition: opacity 0.2s, transform 0.1s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.main-actions button i {
+    font-size: 1.1em;
+}
+
+.main-actions button:active {
+    transform: scale(0.98);
 }
 
 .main-actions button:hover {
