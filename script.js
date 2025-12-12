@@ -44,10 +44,26 @@ tabsContainer.addEventListener('click', (e) => {
     }
 });
 
+function loadSavedLogins() {
+    const savedLearner = localStorage.getItem('savedLearnerLogin');
+    const savedAdmin = localStorage.getItem('savedAdminLogin');
+
+    if (savedLearner) {
+        learnerForm.elements.login.value = savedLearner;
+        document.getElementById('remember-learner').checked = true;
+    }
+
+    if (savedAdmin) {
+        adminForm.elements['admin-login'].value = savedAdmin;
+        document.getElementById('remember-admin').checked = true;
+    }
+}
+
 async function handleLearnerLogin(event) {
     event.preventDefault();
     const login = learnerForm.elements.login.value;
     const password = learnerForm.elements.password.value;
+    const rememberMe = document.getElementById('remember-learner').checked;
 
     learnerErrorMessage.textContent = '';
     slowConnectionMessage.classList.add('hidden');
@@ -75,6 +91,13 @@ async function handleLearnerLogin(event) {
             throw new Error(errorData.message || 'Произошла ошибка');
         }
         const data = await response.json();
+        
+        if (rememberMe) {
+            localStorage.setItem('savedLearnerLogin', login);
+        } else {
+            localStorage.removeItem('savedLearnerLogin');
+        }
+
         localStorage.setItem('learnerToken', data.token);
         handleMaintenanceBanner(data.maintenanceMode);
         displayLearnerInfo(data.learnerData);
@@ -92,6 +115,7 @@ adminForm.addEventListener('submit', async (event) => {
     event.preventDefault();
     const login = adminForm.elements['admin-login'].value;
     const password = adminForm.elements['admin-password'].value;
+    const rememberMe = document.getElementById('remember-admin').checked;
 
     adminErrorMessage.textContent = '';
     adminLoader.classList.remove('hidden');
@@ -113,6 +137,13 @@ adminForm.addEventListener('submit', async (event) => {
             throw new Error(errorData.message || 'Произошла ошибка');
         }
         const data = await response.json();
+
+        if (rememberMe) {
+            localStorage.setItem('savedAdminLogin', login);
+        } else {
+            localStorage.removeItem('savedAdminLogin');
+        }
+
         localStorage.setItem('adminToken', data.token);
         localStorage.setItem('adminRole', data.role);
         window.location.href = 'admin.html';
@@ -361,6 +392,8 @@ window.addEventListener('keydown', function(event) {
 });
 
 document.addEventListener('DOMContentLoaded', async () => {
+    loadSavedLogins();
+
     try {
         const res = await fetch(`${API_URL}/api/settings/maintenance`);
         if (res.ok) {
