@@ -194,3 +194,24 @@ export const emptyTrash = (type) => fetchWithAuth('/api/trash/empty', {
     body: JSON.stringify({ type }), 
     headers: { 'Content-Type': 'application/json' } 
 });
+
+export const getSystemUpdates = () => fetchWithAuth('/api/updates');
+export const createSystemUpdate = (data) => fetchWithAuth('/api/updates', { 
+    method: 'POST', 
+    body: JSON.stringify(data), 
+    headers: { 'Content-Type': 'application/json' } 
+});
+export const updateSystemUpdate = (id, data) => fetchWithAuth(`/api/updates/${id}`, { 
+    method: 'PUT', 
+    body: JSON.stringify(data), 
+    headers: { 'Content-Type': 'application/json' } 
+});
+export const deleteSystemUpdate = (id) => fetchWithAuth(`/api/updates/${id}`, { method: 'DELETE' });
+
+export const checkUpdates = () => fetchWithAuth('/api/updates/check');
+
+export const resetAdminPassword = (id, newPassword) => fetchWithAuth(`/api/admins/${id}/password`, {
+    method: 'PUT',
+    body: JSON.stringify({ newPassword }),
+    headers: { 'Content-Type': 'application/json' }
+});

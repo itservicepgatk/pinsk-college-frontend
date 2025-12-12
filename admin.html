@@ -11,123 +11,177 @@
     <script src="https://cdn.tiny.cloud/1/d08f0zn1o7mnowm67s6zk1k8424cke1ceh6k22e5lj48i799/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
 </head>
 <body>
-<div id="maintenance-banner">
-    <strong>Внимание!</strong> На портале ведутся технические работы. Возможны временные ошибки и нестабильная работа.
-</div>
-
-    <div id="admin-login-view-container" class="hidden">
+    <div id="maintenance-banner">
+        <strong>Внимание!</strong> На портале ведутся технические работы. Возможны временные ошибки и нестабильная работа.
     </div>
 
-    <div id="dashboard-container" class="hidden">
-        <div class="dashboard-header">
-            <h1 id="dashboard-title">Группы</h1>
-            <div class="global-search-container">
-                <input type="text" id="global-search-input" placeholder="Поиск по учащимся и группам...">
-                <div id="global-search-results" class="hidden"></div>
-            </div>
-            <div>
-                <button id="logout-button">Выйти</button>
+    <div id="admin-login-view-container" class="hidden">
+        <div class="avatar"></div>
+        <h1 class="main-title">Вход в Админку</h1>
+        <div class="form-card">
+            <form id="admin-login-form">
+                <div class="form-group">
+                    <label for="admin-login">Логин</label>
+                    <input type="text" id="admin-login" required>
+                </div>
+                <div class="form-group password-toggle-container">
+                    <label for="admin-password">Пароль</label>
+                    <input type="password" id="admin-password" required>
+                    <span class="password-toggle-icon"></span>
+                </div>
+                <button type="submit">Войти</button>
+                <div id="admin-loader" class="loader hidden"></div>
+                <p id="admin-error-message" class="error"></p>
+            </form>
+        </div>
+    </div>
+
+    <div id="dashboard-container" class="admin-wrapper hidden">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo-icon">
+                    <img src="assets/images/logo.webp" alt="Логотип">
+                </div>
+                <div class="logo-text">
+                    <span class="logo-title">ПГАТК</span>
+                <span class="logo-subtitle">Панель управления</span>
             </div>
         </div>
-        <div class="dashboard-stats">
-            <div class="stat-card">
-                <div class="stat-label">Всего учащихся</div>
-                <div class="stat-value" id="total-learners-stat">...</div>
-                <button id="details-btn" class="btn-details">Подробнее</button>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">Учащихся с задолженностями</div>
-                <div class="stat-value" id="debtors-count-stat">...</div>
-                <button id="details-debtors-btn" class="btn-details">Подробнее</button>
-            </div>
-        </div>
-        <div id="groups-view">
-            <div class="main-actions" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));">
-                <button id="all-learners-btn">
-                    <i class="fa-solid fa-users"></i> Все учащиеся
+
+            <nav class="sidebar-nav">
+                <div class="nav-section">УЧАЩИЕСЯ</div>
+                <button id="all-learners-btn" class="nav-item">
+                    <i class="fa-solid fa-users"></i> <span>Все учащиеся</span>
                 </button>
-                
-                <button id="group-editor-btn">
-                    <i class="fa-solid fa-pen-to-square"></i> Редактор группы
+                <button id="group-editor-btn" class="nav-item">
+                    <i class="fa-solid fa-pen-to-square"></i> <span>Редактор группы</span>
                 </button>
-                
-                <button id="material-manager-btn" style="background-color: #ffc107; color: black;">
-                    <i class="fa-solid fa-folder-open"></i> Материалы
+                <button onclick="document.getElementById('details-debtors-btn').click()" class="nav-item">
+                     <i class="fa-solid fa-circle-exclamation"></i> <span>Должники</span>
                 </button>
-                
-                <button id="announcements-btn" style="background-color: #6f42c1; color: white;">
-                    <i class="fa-solid fa-bullhorn"></i> Объявления
+
+                <div class="nav-section">КОНТЕНТ</div>
+                <button id="material-manager-btn" class="nav-item">
+                    <i class="fa-solid fa-folder-open"></i> <span>Материалы</span>
                 </button>
-                
-                <button id="broadcasts-btn" style="background-color: #fd7e14; color: white;">
-                    <i class="fa-solid fa-paper-plane"></i> Рассылки
+                <button id="announcements-btn" class="nav-item">
+                    <i class="fa-solid fa-bullhorn"></i> <span>Объявления</span>
                 </button>
-                
-                <button id="reports-btn" style="background-color: #0dcaf0; color: black;">
-                    <i class="fa-solid fa-file-contract"></i> Отчеты
+                <button id="broadcasts-btn" class="nav-item">
+                    <i class="fa-solid fa-paper-plane"></i> <span>Рассылки</span>
                 </button>
-                
-                <button id="trash-btn" style="background-color: #dc3545; color: white;">
-                    <i class="fa-solid fa-trash-can"></i> Корзина
+
+                <div class="nav-section">СИСТЕМА</div>
+                <button id="reports-btn" class="nav-item">
+                    <i class="fa-solid fa-file-contract"></i> <span>Отчеты</span>
                 </button>
-                
-                <button id="manage-admins-btn" class="super-admin-feature hidden" style="background-color: #17a2b8; color: white;">
-                    <i class="fa-solid fa-user-shield"></i> Администраторы
+                <button id="trash-btn" class="nav-item">
+                    <i class="fa-solid fa-trash-can"></i> <span>Корзина</span>
                 </button>
-                
-                <button id="manage-backups-btn" class="super-admin-feature hidden" style="background-color: #343a40; color: white;">
-                    <i class="fa-solid fa-database"></i> Бэкапы
+                <button id="manage-admins-btn" class="nav-item super-admin-feature hidden">
+                    <i class="fa-solid fa-user-shield"></i> <span>Администраторы</span>
                 </button>
-                
-                <div class="super-admin-feature hidden" id="maintenance-mode-container">
-                    <label for="maintenance-toggle" class="maintenance-label">
-                        <i class="fa-solid fa-screwdriver-wrench"></i> Тест. режим
-                    </label>
-                    <label class="switch">
+                <button id="manage-backups-btn" class="nav-item super-admin-feature hidden">
+                    <i class="fa-solid fa-database"></i> <span>Бэкапы</span>
+                </button>
+                <button id="updates-btn" class="nav-item">
+                    <i class="fa-solid fa-rocket"></i> <span>Что нового</span>
+                </button>
+            </nav>
+
+            <div class="sidebar-footer super-admin-feature hidden" id="maintenance-mode-container">
+                <div class="maintenance-wrapper">
+                    <span><i class="fa-solid fa-screwdriver-wrench"></i> Тест. режим</span>
+                    <label class="switch small">
                         <input type="checkbox" id="maintenance-toggle">
                         <span class="slider round"></span>
                     </label>
                 </div>
             </div>
-            <div id="groups-container" class="folders-container">
-            </div>
-        </div>
-        <div id="learners-view" class="hidden">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-                <div>
-                    <button id="back-to-groups-btn">← Назад к группам</button>
-                    <button id="add-learner-btn">Добавить учащегося</button>
-                    <button id="import-csv-btn" class="btn-secondary">Импорт из CSV</button>
-                    <button id="export-csv-btn" class="btn-secondary">Экспорт в CSV</button>
-                    <button id="import-instructions-btn" class="btn-secondary">Инструкция</button>
-                    <input type="file" id="csv-file-input" class="hidden" accept=".csv">
+        </aside>
+
+        <main class="main-content">
+            <header class="top-bar">
+                <h2 id="dashboard-title">Обзор</h2>
+                
+                <div class="top-bar-right">
+                    <div class="global-search-container">
+                        <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                        <input type="text" id="global-search-input" placeholder="Поиск (студент, группа)...">
+                        <div id="global-search-results" class="hidden"></div>
+                    </div>
+                    <button id="logout-button" class="btn-logout">
+                        <i class="fa-solid fa-arrow-right-from-bracket"></i> Выйти
+                    </button>
                 </div>
-                <button id="delete-selected-btn" class="btn-danger hidden" style="margin-right: 10px;">Удалить выбранных (0)</button>
+            </header>
+
+            <div class="content-area">
+                <div class="dashboard-stats">
+                    <div class="stat-card">
+                        <div class="stat-icon"><i class="fa-solid fa-user-graduate"></i></div>
+                        <div class="stat-info">
+                            <div class="stat-label">Всего учащихся</div>
+                            <div class="stat-value" id="total-learners-stat">...</div>
+                        </div>
+                        <button id="details-btn" class="btn-icon-only" title="Подробнее"><i class="fa-solid fa-chevron-right"></i></button>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon red"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                        <div class="stat-info">
+                            <div class="stat-label">Должники</div>
+                            <div class="stat-value" id="debtors-count-stat">...</div>
+                        </div>
+                        <button id="details-debtors-btn" class="btn-icon-only" title="Подробнее"><i class="fa-solid fa-chevron-right"></i></button>
+                    </div>
+                </div>
+
+                <div id="groups-view">
+                    <div id="groups-container" class="folders-container">
+                    </div>
+                </div>
+
+                <div id="learners-view" class="hidden">
+                    <div class="view-header">
+                        <button id="back-to-groups-btn" class="btn-secondary"><i class="fa-solid fa-arrow-left"></i> Назад</button>
+                        <div class="view-actions">
+                            <button id="add-learner-btn" class="btn-primary"><i class="fa-solid fa-plus"></i> Добавить</button>
+                            <button id="import-csv-btn" class="btn-secondary">Импорт</button>
+                            <button id="export-csv-btn" class="btn-secondary">Экспорт</button>
+                            <button id="import-instructions-btn" class="btn-ghost" title="Инструкция"><i class="fa-solid fa-circle-info"></i></button>
+                            <input type="file" id="csv-file-input" class="hidden" accept=".csv">
+                        </div>
+                    </div>
+                    <div class="filters-bar">
+                        <input type="text" id="search-input" placeholder="Фильтр по имени...">
+                        <select id="group-filter-select">
+                            <option value="">-- Все группы --</option>
+                        </select>
+                        <button id="delete-selected-btn" class="btn-danger hidden">Удалить выбранных</button>
+                    </div>
+                    
+                    <div class="table-container">
+                        <table id="learners-table" class="learners-table">
+                            <thead id="table-head">
+                                <tr>
+                                    <th style="width: 40px;"><input type="checkbox" id="select-all-checkbox"></th>
+                                    <th data-sort-by="full_name">ФИО</th>
+                                    <th data-sort-by="group_name">Группа</th>
+                                    <th data-sort-by="login">Логин</th>
+                                    <th>Действия</th>
+                                </tr>
+                            </thead>
+                            <tbody id="learners-table-body"></tbody>
+                        </table>
+                    </div>
+                    <div id="pagination-container">
+                        <div class="pagination-wrapper"></div>
+                    </div>
+                </div>
             </div>
-            <div class="filters-container" style="display: flex; gap: 15px; margin-top: 20px; margin-bottom: 10px;">
-                <input type="text" id="search-input" placeholder="Поиск по ФИО..." style="flex-grow: 1; margin: 0;">
-                <select id="group-filter-select" style="min-width: 200px; font-size: 16px; padding: 10px; border-radius: 8px; border: 1px solid #ccc;">
-                    <option value="">-- Все группы --</option>
-                </select>
-            </div>
-            <table id="learners-table" class="learners-table">
-                <thead id="table-head">
-                    <tr>
-                        <th style="width: 20px;"><input type="checkbox" id="select-all-checkbox"></th>
-                        <th data-sort-by="full_name">ФИО</th>
-                        <th data-sort-by="group_name">Группа</th>
-                        <th data-sort-by="login">Логин</th>
-                        <th>Действия</th>
-                    </tr>
-                </thead>
-                <tbody id="learners-table-body">
-                </tbody>
-            </table>
-            <div id="pagination-container">
-                <div class="pagination-wrapper"></div>
-            </div>
-        </div>
+        </main>
     </div>
+
     <div id="modal" class="modal-overlay hidden">
         <div class="modal-content">
             <div class="modal-header">
@@ -158,6 +212,7 @@
             </form>
         </div>
     </div>
+
     <div id="details-modal" class="modal-overlay hidden">
         <div class="modal-content">
             <div class="modal-header">
@@ -178,6 +233,7 @@
             </table>
         </div>
     </div>
+
     <div id="group-editor-modal" class="modal-overlay hidden">
         <div class="modal-content">
             <div class="modal-header">
@@ -205,6 +261,7 @@
             </form>
         </div>
     </div>
+
     <div id="material-manager-modal" class="modal-overlay hidden">
         <div class="modal-content" style="max-width: 800px;">
             <div class="modal-header">
@@ -248,6 +305,7 @@
             </div>
         </div>
     </div>
+
     <div id="audit-log-modal" class="modal-overlay hidden">
         <div class="modal-content" style="max-width: 1000px;">
             <div class="modal-header">
@@ -272,65 +330,109 @@
             <div id="audit-pagination-container" class="pagination-container" style="justify-content: center; margin-top: 20px;"><div class="pagination-wrapper"></div></div>
         </div>
     </div>
+
     <div id="backup-manager-modal" class="modal-overlay hidden">
         <div class="modal-content" style="max-width: 800px;">
             <div class="modal-header">
-                <h2>Управление резервными копиями</h2><button id="backup-manager-close-btn" class="close-btn">&times;</button>
+                <h2>Управление резервными копиями</h2>
+                <button id="backup-manager-close-btn" class="close-btn">&times;</button>
             </div>
-            <p class="form-hint">Автоматическое резервное копирование выполняется каждые 5 часов. Здесь вы можете создать копию вручную или восстановить данные из существующей.</p>
-            <button id="create-backup-manual-btn" class="btn-primary" style="margin-bottom: 20px;">Создать бэкап сейчас</button>
-            <h4>Доступные резервные копии:</h4>
-            <div id="backup-list-container" style="max-height: 400px; overflow-y: auto; border: 1px solid #eee; padding: 10px; border-radius: 6px;"><p>Загрузка...</p></div>
+            
+            <div style="padding: 24px; border-bottom: 1px solid #e2e8f0; background: #f8fafc;">
+                <div class="form-hint" style="margin: 0 0 20px;">
+                    <i class="fa-solid fa-circle-info"></i> Автоматическое резервное копирование выполняется каждые 5 часов.
+                </div>
+                <div style="display: flex; justify-content: flex-end;">
+                    <button id="create-backup-manual-btn" class="btn-primary">
+                        <i class="fa-solid fa-plus"></i> Создать бэкап сейчас
+                    </button>
+                </div>
+            </div>
+            
+            <div style="padding: 24px;">
+                <h4 style="margin-top: 0; margin-bottom: 15px; color: #334155;">Доступные копии</h4>
+                <div id="backup-list-container" style="max-height: 400px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 8px;">
+                    <p style="padding: 20px; text-align: center; color: #94a3b8;">Загрузка...</p>
+                </div>
+            </div>
         </div>
     </div>
+
     <div id="manage-admins-modal" class="modal-overlay hidden">
         <div class="modal-content">
             <div class="modal-header">
-                <h2>Управление администраторами</h2><button id="manage-admins-close-btn" class="close-btn">&times;</button>
+                <h2>Управление администраторами</h2>
+                <button id="manage-admins-close-btn" class="close-btn">&times;</button>
             </div>
-            <h4>Добавить администратора</h4>
-            <form id="add-admin-form" style="display: flex; gap: 10px; margin-bottom: 20px; align-items: flex-end;">
-                <div class="form-group-modal" style="flex-grow: 1;"><label>Логин:</label><input type="text" id="new-admin-login" required></div>
-                <div class="form-group-modal" style="flex-grow: 1;"><label>Пароль:</label><input type="password" id="new-admin-password" required></div>
-                <button type="submit" class="btn-primary" style="height: 42px;">Добавить</button>
-            </form>
-            <h4>Список администраторов</h4>
-            <div style="max-height: 300px; overflow-y: auto;">
-                <table id="admins-table" style="width: 100%;">
-                    <thead><tr><th>Логин</th><th>Роль</th><th>Действия</th></tr></thead>
-                    <tbody id="admins-table-body"></tbody>
-                </table>
+            
+            <div style="padding: 24px; border-bottom: 1px solid #e2e8f0; background: #f8fafc;">
+                <h4 style="margin-top: 0; margin-bottom: 15px; color: #334155;">Добавить нового администратора</h4>
+                <form id="add-admin-form" style="display: grid; grid-template-columns: 1fr 1fr auto; gap: 15px; align-items: end;">
+                    <div class="form-group-modal" style="margin: 0;">
+                        <label>Логин</label>
+                        <input type="text" id="new-admin-login" required>
+                    </div>
+                    <div class="form-group-modal" style="margin: 0;">
+                        <label>Пароль</label>
+                        <input type="password" id="new-admin-password" required>
+                    </div>
+                    <button type="submit" class="btn-primary" style="height: 42px;">
+                        <i class="fa-solid fa-plus"></i> Добавить
+                    </button>
+                </form>
+            </div>
+
+            <div style="padding: 24px;">
+                <h4 style="margin-top: 0; margin-bottom: 15px; color: #334155;">Список администраторов</h4>
+                <div class="table-container" style="max-height: 300px; overflow-y: auto;">
+                    <table id="admins-table" class="learners-table" style="width: 100%;">
+                        <thead>
+                            <tr>
+                                <th>Логин</th>
+                                <th style="text-align: center;">Роль</th>
+                                <th style="text-align: right;">Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody id="admins-table-body"></tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
+
     <div id="sessions-manager-modal" class="modal-overlay hidden">
         <div class="modal-content" style="max-width: 1100px;">
             <div class="modal-header">
                 <h2>История сессий пользователей</h2>
                 <button id="sessions-manager-close-btn" class="close-btn">&times;</button>
             </div>
-            <div style="overflow-x: auto;">
-                <table id="sessions-log-table" class="learners-table" style="width: 100%;">
-                    <thead>
-                        <tr>
-                            <th>Статус</th>
-                            <th>Пользователь</th>
-                            <th>Группа</th>
-                            <th>Время входа</th>
-                            <th>Последняя активность</th>
-                            <th>Время выхода</th>
-                            <th>IP-адрес</th>
-                            <th>Флаг</th>
-                        </tr>
-                    </thead>
-                    <tbody id="sessions-log-table-body"></tbody>
-                </table>
-            </div>
-            <div id="sessions-pagination-container" class="pagination-container" style="justify-content: center; margin-top: 20px;">
-                <div class="pagination-wrapper"></div>
+            
+            <div style="padding: 24px;">
+                <div class="table-container" style="max-height: 60vh; overflow-y: auto;">
+                    <table id="sessions-log-table" class="learners-table" style="width: 100%;">
+                        <thead>
+                            <tr>
+                                <th style="width: 100px;">Статус</th>
+                                <th>Пользователь</th>
+                                <th>Группа</th>
+                                <th>Вход</th>
+                                <th>Активность</th>
+                                <th>Выход</th>
+                                <th>IP</th>
+                                <th style="width: 50px; text-align: center;">Страна</th>
+                            </tr>
+                        </thead>
+                        <tbody id="sessions-log-table-body"></tbody>
+                    </table>
+                </div>
+                
+                <div id="sessions-pagination-container" style="display: flex; justify-content: center; margin-top: 20px;">
+                    <div class="pagination-wrapper"></div>
+                </div>
             </div>
         </div>
     </div>
+
     <div id="debtors-modal" class="modal-overlay hidden">
         <div class="modal-content" style="max-width: 900px;">
             <div class="modal-header">
@@ -353,13 +455,13 @@
             </div>
         </div>
     </div>
+
     <div id="announcements-modal" class="modal-overlay hidden">
         <div class="modal-content" style="max-width: 900px;">
             <div class="modal-header">
                 <h2 id="announcement-modal-title">Создать новое объявление</h2>
                 <button id="announcements-close-btn" class="close-btn">&times;</button>
             </div>
-            <h4>Создать новое объявление</h4>
             <form id="announcement-form">
                 <input type="hidden" id="announcement-id">
                 <div class="modal-form-grid">
@@ -407,21 +509,30 @@
             </div>
         </div>
     </div>
+
     <div id="reports-modal" class="modal-overlay hidden">
-      <div class="modal-content" style="max-width: 600px;">
-          <div class="modal-header">
-              <h2>Генератор отчетов</h2>
-              <button id="reports-close-btn" class="close-btn">&times;</button>
-          </div>
-          <div class="reports-container">
-              <h4>Доступные отчеты:</h4>
-              <div class="report-item">
-                  <span>Отчет по всем учащимся с задолженностями.</span>
-                  <button id="generate-debtors-csv-btn" class="btn-primary">Скачать (CSV)</button>
-              </div>
-          </div>
-      </div>
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header">
+                <h2>Генератор отчетов</h2>
+                <button id="reports-close-btn" class="close-btn">&times;</button>
+            </div>
+            
+            <div style="padding: 24px;">
+                <h4 style="margin-top: 0; margin-bottom: 15px; color: #64748b; font-size: 14px; text-transform: uppercase;">Доступные отчеты</h4>
+                
+                <div class="report-item" style="display: flex; justify-content: space-between; align-items: center; padding: 15px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;">
+                    <div>
+                        <strong style="display: block; color: #334155; margin-bottom: 4px;">Должники</strong>
+                        <span style="font-size: 13px; color: #64748b;">Полный список всех учащихся с академическими задолженностями.</span>
+                    </div>
+                    <button id="generate-debtors-csv-btn" class="btn-primary" style="white-space: nowrap; margin-left: 15px;">
+                        <i class="fa-solid fa-download"></i> Скачать CSV
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
+
     <div id="learner-profile-modal" class="modal-overlay hidden">
         <div class="modal-content" style="max-width: 1000px;">
             <div class="modal-header">
@@ -441,18 +552,18 @@
             </div>
         </div>
     </div>
-    <div id="broadcasts-modal" class="modal-overlay hidden">
-        <div class="modal-content" style="max-width: 800px;">
+
+<div id="broadcasts-modal" class="modal-overlay hidden">
+        <div class="modal-content" style="max-width: 700px;">
             <div class="modal-header">
                 <h2>Создать рассылку</h2>
                 <button id="broadcasts-close-btn" class="close-btn">&times;</button>
             </div>
-            <div style="text-align: right; margin-bottom: 15px;">
-                <button id="manage-templates-btn" class="btn-secondary" style="padding: 6px 12px;">Управление шаблонами</button>
-            </div>
+            
             <form id="broadcast-form">
-                <div class="modal-form-grid">
-                    <div class="form-group-modal grid-col-span-2">
+                <div class="modal-form-grid" style="grid-template-columns: 1fr;"> 
+                    
+                    <div class="form-group-modal">
                         <label for="broadcast-target">Кому отправить:</label>
                         <select id="broadcast-target" required>
                             <option value="global">Всем учащимся</option>
@@ -460,23 +571,32 @@
                             <option value="debtors">Всем должникам</option>
                         </select>
                     </div>
-                    <div class="form-group-modal grid-col-span-2 hidden" id="broadcast-group-container">
+
+                    <div class="form-group-modal hidden" id="broadcast-group-container">
                         <label for="broadcast-group-select">Выберите группу:</label>
                         <select id="broadcast-group-select">
                             <option value="">-- Загрузка... --</option>
                         </select>
                     </div>
-                    <div class="form-group-modal grid-col-span-2">
-                        <label for="broadcast-template-select">Шаблон сообщения (необязательно):</label>
-                        <select id="broadcast-template-select">
-                            <option value="">-- Без шаблона --</option>
-                        </select>
+
+                    <div class="form-group-modal">
+                        <label for="broadcast-template-select">Шаблон сообщения:</label>
+                        <div style="display: flex; gap: 10px;">
+                            <select id="broadcast-template-select" style="flex-grow: 1;">
+                                <option value="">-- Без шаблона --</option>
+                            </select>
+                            <button type="button" id="manage-templates-btn" class="btn-secondary" style="white-space: nowrap;">
+                                <i class="fa-solid fa-list-check"></i> Шаблоны
+                            </button>
+                        </div>
                     </div>
-                    <div class="form-group-modal grid-col-span-2">
+
+                    <div class="form-group-modal">
                         <label for="broadcast-title">Заголовок</label>
                         <input type="text" id="broadcast-title" required>
                     </div>
-                    <div class="form-group-modal grid-col-span-2">
+
+                    <div class="form-group-modal">
                         <label for="broadcast-editor">Текст сообщения</label>
                         <div id="broadcast-editor"></div>
                     </div>
@@ -487,19 +607,20 @@
             </form>
         </div>
     </div>
+
     <div id="template-manager-modal" class="modal-overlay hidden">
-        <div class="modal-content" style="max-width: 900px;">
+        <div class="modal-content" style="max-width: 800px;">
             <div class="modal-header">
                 <h2>Управление шаблонами</h2>
                 <button id="template-manager-close-btn" class="close-btn">&times;</button>
             </div>
-            <h4>Создать / Редактировать шаблон</h4>
+            
             <form id="template-form">
                 <input type="hidden" id="template-id">
-                <div class="modal-form-grid" style="grid-template-columns: 1fr;">
+                <div class="modal-form-grid" style="grid-template-columns: 1fr;"> 
                     <div class="form-group-modal">
                         <label for="template-title">Название шаблона</label>
-                        <input type="text" id="template-title" required>
+                        <input type="text" id="template-title" required placeholder="Например: Поздравление с праздником">
                     </div>
                     <div class="form-group-modal">
                         <label for="template-editor">Содержимое шаблона</label>
@@ -508,15 +629,19 @@
                 </div>
                 <div class="modal-buttons">
                     <button type="submit" class="btn-primary">Сохранить шаблон</button>
-                    <button type="button" id="template-form-cancel-btn" class="btn-cancel">Отмена</button>
+                    <button type="button" id="template-form-cancel-btn" class="btn-secondary">Очистить</button>
                 </div>
             </form>
-            <h4 style="margin-top: 30px;">Существующие шаблоны</h4>
-            <div id="templates-list-container" style="max-height: 250px; overflow-y: auto;">
-                <p>Загрузка...</p>
+            
+            <div style="padding: 0 24px 24px;">
+                <h4 style="margin-top: 30px; margin-bottom: 15px; color: #334155;">Существующие шаблоны</h4>
+                <div id="templates-list-container" style="max-height: 250px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 8px;">
+                    <p style="padding: 20px; text-align: center; color: #94a3b8;">Загрузка...</p>
+                </div>
             </div>
         </div>
     </div>
+
     <div id="trash-modal" class="modal-overlay hidden">
         <div class="modal-content" style="max-width: 1000px;">
             <div class="modal-header">
@@ -530,6 +655,30 @@
             <div id="trash-learners" class="profile-tab-content active">
             </div>
             <div id="trash-materials" class="profile-tab-content">
+            </div>
+        </div>
+    </div>
+
+    <div id="updates-modal" class="modal-overlay hidden">
+        <div class="modal-content" style="max-width: 700px;">
+            <div class="modal-header">
+                <h2>История обновлений</h2>
+                <button id="updates-close-btn" class="close-btn">&times;</button>
+            </div>
+            
+            <div id="create-update-container" class="super-admin-feature hidden" style="margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px;">
+                <h4>Добавить новость</h4>
+                <form id="create-update-form">
+                    <div class="form-group-modal">
+                        <input type="text" id="update-title" placeholder="Заголовок (версия)" required style="margin-bottom: 10px;">
+                        <textarea id="update-content" rows="3" placeholder="Что изменилось..." required></textarea>
+                    </div>
+                    <button type="submit" class="btn-primary" style="margin-top: 10px;">Опубликовать</button>
+                </form>
+            </div>
+
+            <div id="updates-list" class="updates-timeline">
+                <p>Загрузка...</p>
             </div>
         </div>
     </div>

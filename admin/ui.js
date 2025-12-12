@@ -80,3 +80,13 @@ export function showLoading() {
 export function closeLoading() {
     Swal.close();
 }
+
+export function initializeModalClickOutside() {
+    document.querySelectorAll('.modal-overlay').forEach(modal => {
+        modal.addEventListener('mousedown', (e) => {
+            if (e.target === modal) {
+                modal.classList.add('hidden');
+            }
+        });
+    });
+}

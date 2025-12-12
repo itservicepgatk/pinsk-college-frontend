@@ -1,7 +1,7 @@
 import { API_URL } from './config.js';
 import { state } from './state.js';
 import { initializeAuth, resetInactivityTimer } from './auth.js';
-import { showView, toggleSuperAdminFeatures } from './ui.js';
+import { showView, toggleSuperAdminFeatures, initializeModalClickOutside } from './ui.js'; // <-- ОБЪЕДИНЕННЫЙ ИМПОРТ
 import { initializeDashboard } from './modules/dashboard.js';
 import { initializeGroups } from './modules/groups.js';
 import { initializeLearners } from './modules/learners.js';
@@ -20,6 +20,7 @@ import { initializeBroadcasts } from './modules/broadcasts.js';
 import { initializeTemplates } from './modules/templates.js';
 import { initializeGlobalSearch } from './modules/globalSearch.js';
 import { initializeTrash } from './modules/trash.js';
+import { initializeUpdates } from './modules/updates.js';
 
 export function initializeApp() {
     showView('dashboard-container');
@@ -44,6 +45,8 @@ export function initializeApp() {
     initializeTemplates();
     initializeGlobalSearch(); 
     initializeTrash();
+    initializeUpdates();
+    initializeModalClickOutside();
 }
 
 document.addEventListener('DOMContentLoaded', async () => {

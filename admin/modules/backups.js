@@ -3,27 +3,29 @@ import * as api from '../api.js';
 import * as ui from '../ui.js';
 
 async function fetchAndRenderBackups() {
-    DOMElements.backupListContainer.innerHTML = '<p>Загрузка...</p>';
+    DOMElements.backupListContainer.innerHTML = '<p style="padding: 20px; text-align: center; color: #94a3b8;">Загрузка...</p>';
     try {
         const backups = await api.getBackups();
         if (!backups || backups.length === 0) {
-            DOMElements.backupListContainer.innerHTML = '<p>Резервные копии не найдены.</p>';
+            DOMElements.backupListContainer.innerHTML = '<p style="padding: 20px; text-align: center;">Резервные копии не найдены.</p>';
             return;
         }
         DOMElements.backupListContainer.innerHTML = backups.map(backup => `
-            <div class="backup-item" data-filename="${backup.name}">
+            <div class="backup-item" data-filename="${backup.name}" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border-bottom: 1px solid #f1f5f9; background: #fff;">
                 <div>
-                    <strong>${backup.name}</strong><br>
-                    <small>Создан: ${new Date(backup.created_at).toLocaleString('ru-RU')}</small>
+                    <div style="font-weight: 600; color: #334155; font-size: 14px;">${backup.name}</div>
+                    <div style="font-size: 12px; color: #94a3b8; margin-top: 4px;">
+                        <i class="fa-regular fa-clock"></i> ${new Date(backup.created_at).toLocaleString('ru-RU')}
+                    </div>
                 </div>
-                <div>
-                    <button class="btn-secondary btn-restore-backup">Восстановить</button>
-                    <button class="btn-danger btn-delete-backup">Удалить</button>
+                <div style="display: flex; gap: 8px;">
+                    <button class="btn-secondary btn-restore-backup" style="padding: 6px 12px; font-size: 12px;">Восстановить</button>
+                    <button class="btn-danger btn-delete-backup" style="padding: 6px 12px; font-size: 12px;">Удалить</button>
                 </div>
             </div>
         `).join('');
     } catch (error) {
-        DOMElements.backupListContainer.innerHTML = `<p style="color: red;">${error.message}</p>`;
+        DOMElements.backupListContainer.innerHTML = `<p style="padding: 20px; text-align: center; color: #ef4444;">${error.message}</p>`;
     }
 }
 

@@ -1,5 +1,7 @@
-import * as api from '../api.js';
-import * as ui from '../ui.js';
+
+// Mock imports
+const api = {};
+const ui = {};
 
 let currentTab = 'learners';
 
@@ -166,6 +168,7 @@ export function initializeTrash() {
 
     closeBtn.addEventListener('click', () => modal.classList.add('hidden'));
 
+    // Делегирование событий
     modal.addEventListener('click', (e) => {
         const target = e.target;
         
@@ -183,18 +186,11 @@ export function initializeTrash() {
     const tabLinks = modal.querySelectorAll('.tab-link');
     tabLinks.forEach(link => {
         link.addEventListener('click', () => {
-            modal.querySelectorAll('.tab-link').forEach(el => el.classList.remove('active'));
-            modal.querySelectorAll('.profile-tab-content').forEach(el => el.classList.remove('active'));
-            
+            modal.querySelector('.tab-link.active').classList.remove('active');
+            modal.querySelector('.profile-tab-content.active').classList.remove('active');
             link.classList.add('active');
-            
-            const targetContentId = link.dataset.tab;
-            const targetContent = document.getElementById(targetContentId);
-            if (targetContent) {
-                targetContent.classList.add('active');
-            }
-
-            currentTab = targetContentId === 'trash-learners' ? 'learners' : 'materials';
+            document.getElementById(link.dataset.tab).classList.add('active');
+            currentTab = link.dataset.tab === 'trash-learners' ? 'learners' : 'materials';
         });
     });
 }
