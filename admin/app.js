@@ -21,6 +21,7 @@ import { initializeTemplates } from './modules/templates.js';
 import { initializeGlobalSearch } from './modules/globalSearch.js';
 import { initializeTrash } from './modules/trash.js';
 import { initializeUpdates } from './modules/updates.js';
+import { initializeTickets } from './modules/tickets.js';
 
 export function initializeApp() {
     showView('dashboard-container');
@@ -47,6 +48,7 @@ export function initializeApp() {
     initializeTrash();
     initializeUpdates();
     initializeModalClickOutside();
+    initializeTickets();
 }
 
 document.addEventListener('DOMContentLoaded', async () => {

@@ -3,6 +3,7 @@ import * as api from '../api.js';
 import * as ui from '../ui.js';
 import { initializeDashboard } from './dashboard.js';
 import { initializeGroups } from './groups.js';
+import { printTicketsForGroup } from './tickets.js'; // Импорт должен работать
 
 function downloadFile(content, fileName, contentType) {
     const a = document.createElement("a");
@@ -30,15 +31,34 @@ async function handleResetPasswords() {
             Swal.fire({ title: 'Сброс паролей...', text: 'Это может занять несколько секунд.', didOpen: () => Swal.showLoading() });
             const csvData = await api.resetGroupPasswords(group_name);
             Swal.close();
+            
+            const lines = csvData.split('\n').slice(1);
+            const learnersWithPasswords = lines.filter(l => l.trim()).map(line => {
+                const [login, password] = line.split(',');
+                return { login, password, full_name: login }; // CSV не возвращает full_name, используем логин как заглушку или можно доработать API
+            });
+
             downloadFile(csvData, `new_passwords_${group_name}.csv`, 'text/csv');
-            ui.showAlert('success', 'Успех!', 'Пароли сброшены. Файл с новыми данными был скачан.');
+
+            const result = await Swal.fire({
+                title: 'Пароли сброшены!',
+                text: 'Файл скачан. Хотите распечатать карточки доступа для этой группы?',
+                icon: 'success',
+                showCancelButton: true,
+                confirmButtonText: 'Да, печатать',
+                cancelButtonText: 'Нет, позже'
+            });
+
+            if (result.isConfirmed) {
+                // Вызываем функцию из tickets.js
+                printTicketsForGroup(group_name, learnersWithPasswords);
+            }
         } catch (error) {
             Swal.close();
             ui.showAlert('error', 'Ошибка!', error.message);
         }
     }
 }
-
 
 async function openGroupEditor() {
     DOMElements.groupEditorForm.reset();

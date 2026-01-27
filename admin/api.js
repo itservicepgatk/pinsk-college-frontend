@@ -103,7 +103,11 @@ export const restoreBackup = (fileName) => fetchWithAuth('/api/backups/restore',
 export const deleteBackup = (data) => fetchWithAuth('/api/backups', { method: 'DELETE', body: JSON.stringify(data), headers: { 'Content-Type': 'application/json' } });
 
 export const getMaintenanceStatus = () => fetch(`${API_URL}/api/settings/maintenance`).then(res => res.json());
-export const setMaintenanceStatus = (data) => fetchWithAuth('/api/settings/maintenance', { method: 'POST', body: JSON.stringify(data), headers: { 'Content-Type': 'application/json' } });
+export const setMaintenanceStatus = (data) => fetchWithAuth('/api/settings/maintenance', { 
+    method: 'POST', 
+    body: JSON.stringify(data), 
+    headers: { 'Content-Type': 'application/json' } 
+});
 
 export const getSessionLogs = (params) => fetchWithAuth(`/api/sessions?${params.toString()}`);
 
@@ -213,5 +217,11 @@ export const checkUpdates = () => fetchWithAuth('/api/updates/check');
 export const resetAdminPassword = (id, newPassword) => fetchWithAuth(`/api/admins/${id}/password`, {
     method: 'PUT',
     body: JSON.stringify({ newPassword }),
+    headers: { 'Content-Type': 'application/json' }
+});
+
+export const resetPasswordsForList = (ids) => fetchWithAuth('/api/learners/reset-passwords-list', {
+    method: 'POST',
+    body: JSON.stringify({ ids }),
     headers: { 'Content-Type': 'application/json' }
 });
