@@ -6,8 +6,19 @@ import * as ui from '../ui.js';
 let currentGroupLearners = [];
 
 function generateTicketHTML(learner, groupName) {
-    const shortUrl = 'bit.ly/pgatk';
-    const qrSrc = 'assets/images/qr.svg';
+    // Базовый URL сайта
+    const baseUrl = 'https://itservicepgatk.github.io/pinsk-college-frontend/';
+    
+    // Ссылка для QR-кода с "магическим" параметром
+    // Если у студента нет ключа (старая база), генерируем просто ссылку на сайт
+    const magicLink = learner.qr_key 
+        ? `${baseUrl}?qr_login=${learner.qr_key}`
+        : baseUrl;
+
+    // Генерируем QR через API
+    const qrSrc = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&margin=0&data=${encodeURIComponent(magicLink)}`;
+
+    const shortUrl = 'bit.ly/pgatk'; // Для ручного ввода
 
     // Если пароль есть (новый), показываем его. Если нет - линию.
     const passwordDisplay = learner.password 
@@ -57,7 +68,10 @@ function generateTicketHTML(learner, groupName) {
 
                     <div class="qr-area">
                         <img src="${qrSrc}" class="qr-img" alt="QR">
-                        <div class="qr-label">Наведите камеру<br>для быстрого входа</div>
+                        <div class="qr-label">
+                            Наведите камеру<br>
+                            <span style="color: #2563eb; font-weight: bold;">для АВТО-ВХОДА</span> 🚀
+                        </div>
                     </div>
                 </div>
 
@@ -116,6 +130,7 @@ async function loadStudentsForGroup(groupName) {
     containerBlock.classList.remove('hidden');
 
     try {
+        // Запрашиваем список студентов (включая qr_key, если он есть в API)
         const params = new URLSearchParams({ searchGroup: groupName, limit: 1000, sortBy: 'full_name' });
         const data = await api.getLearners(params);
         currentGroupLearners = data.learners;
@@ -183,6 +198,7 @@ async function handlePrint() {
             return ui.showAlert('error', 'Ошибка', error.message);
         }
     } else {
+        // Берем данные из кэша
         learnersToPrint = currentGroupLearners.filter(l => selectedIds.includes(String(l.id)));
     }
 
@@ -210,19 +226,27 @@ function renderPrintView(learners, groupName, layout) {
             }
         }
         
+        // Добавляем разделители, если нужно (для макета 2)
+        if (layout === '2' && learners[i] && learners[i+1]) {
+             const separator = document.createElement('div');
+             separator.className = 'ticket-separator';
+             separator.innerHTML = '<span class="scissors">✂️</span><span class="cut-text">линия отреза</span>';
+             // Вставляем разделитель между билетами (это нужно делать аккуратно, зависит от CSS Grid)
+             // В текущем CSS Grid разделитель не нужен, так как есть gap.
+             // Но если очень хочется линию, её можно добавить как псевдоэлемент к ticket-page
+        }
+        
         printSection.appendChild(page);
     }
 
+    // Даем время на загрузку картинок QR
     setTimeout(() => {
         window.print();
-    }, 500);
+    }, 1000);
 }
 
-// ЭКСПОРТИРУЕМ ФУНКЦИЮ ДЛЯ ВНЕШНЕГО ИСПОЛЬЗОВАНИЯ
+// ЭКСПОРТИРУЕМ ФУНКЦИЮ ДЛЯ ВНЕШНЕГО ИСПОЛЬЗОВАНИЯ (например, из groupEditor)
 export async function printTicketsForGroup(groupName, learnersWithPasswords = null) {
-    // Эта функция нужна для вызова из groupEditor.js (старый функционал сброса всей группы)
-    // Если переданы learnersWithPasswords, используем их. Иначе грузим всех.
-    
     let learners = [];
     if (learnersWithPasswords) {
         learners = learnersWithPasswords;
@@ -239,7 +263,6 @@ export async function printTicketsForGroup(groupName, learnersWithPasswords = nu
         }
     }
     
-    // По умолчанию печатаем по 2 на страницу
     renderPrintView(learners, groupName, 2);
 }
 

@@ -1,0 +1,96 @@
+/* === PRINT STYLES (TICKETS) === */
+#print-section { display: none; }
+
+@media print {
+    html, body {
+        height: auto !important;
+        min-height: 100% !important;
+        overflow: visible !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        background: #fff !important;
+        width: 100% !important;
+        font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+
+    body > *:not(#print-section) { display: none !important; }
+    .admin-wrapper, .modal-overlay, #maintenance-banner, #fab-container { display: none !important; }
+
+    #print-section {
+        display: block !important;
+        position: absolute !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100% !important;
+        background: white !important;
+        z-index: 99999 !important;
+    }
+
+    @page { size: A4; margin: 0; }
+
+    .ticket-page {
+        width: 210mm;
+        height: 296mm;
+        page-break-after: always;
+        padding: 10mm;
+        box-sizing: border-box;
+        display: grid;
+        gap: 5mm; 
+    }
+    .ticket-page:last-child { page-break-after: auto; }
+
+    /* --- LAYOUTS --- */
+    #print-section.layout-1 .ticket-page { grid-template-columns: 1fr; grid-template-rows: 1fr; align-items: center; }
+    #print-section.layout-1 .ticket-card { height: 180mm; font-size: 1.2em; }
+
+    #print-section.layout-2 .ticket-page { grid-template-columns: 1fr; grid-template-rows: 1fr 1fr; align-content: start; }
+    #print-section.layout-2 .ticket-card { height: 132mm; }
+
+    #print-section.layout-4 .ticket-page { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 5mm; padding: 5mm; }
+    #print-section.layout-4 .ticket-card { height: 135mm; font-size: 0.8em; border-width: 1px; }
+    #print-section.layout-4 .ticket-header { padding: 3mm; }
+    #print-section.layout-4 .ticket-content { padding: 3mm; gap: 3mm; }
+    #print-section.layout-4 .qr-img { width: 15mm; height: 15mm; }
+    #print-section.layout-4 .cred-value { font-size: 11pt; }
+    #print-section.layout-4 .brand-title { font-size: 12pt; }
+
+    /* --- TICKET CARD --- */
+    .ticket-wrapper { width: 100%; height: 100%; display: flex; flex-direction: column; }
+    .ticket-card { width: 100%; height: 100%; border: 2px solid #333; border-radius: 16px; box-sizing: border-box; display: flex; flex-direction: column; background: #fff; color: #000 !important; overflow: hidden; }
+
+    /* --- HEADER --- */
+    .ticket-header { background-color: #f1f5f9; border-bottom: 2px solid #333; padding: 4mm 8mm; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
+    .brand-area { display: flex; align-items: center; gap: 4mm; }
+    .ticket-logo { width: 14mm; height: 14mm; object-fit: contain; }
+    .brand-title { font-size: 16pt; font-weight: 800; color: #1e293b; line-height: 1; }
+    .brand-subtitle { font-size: 9pt; color: #64748b; text-transform: uppercase; letter-spacing: 1px; }
+    .ticket-type { font-size: 11pt; font-weight: bold; border: 2px solid #333; padding: 1mm 3mm; border-radius: 6px; text-transform: uppercase; }
+
+    /* --- CONTENT --- */
+    .ticket-content { display: flex; flex-grow: 1; padding: 5mm 8mm; gap: 8mm; overflow: hidden; }
+    .info-column { flex: 1.2; display: flex; flex-direction: column; justify-content: space-between; }
+    .instruction-title { font-size: 11pt; font-weight: bold; margin-bottom: 3mm; text-decoration: underline; text-decoration-color: #ccc; }
+    .step-row { display: flex; align-items: flex-start; gap: 3mm; margin-bottom: 2mm; }
+    .step-icon { background: #333; color: #fff; width: 6mm; height: 6mm; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 10pt; flex-shrink: 0; }
+    .step-desc { font-size: 10pt; line-height: 1.3; color: #333; }
+    .url-highlight { font-family: 'Courier New', monospace; font-weight: 900; font-size: 12pt; background: #eee; padding: 1px 4px; border-radius: 4px; }
+    .qr-area { margin-top: auto; display: flex; align-items: center; gap: 4mm; border-top: 1px solid #eee; padding-top: 3mm; }
+    .qr-img { width: 20mm; height: 20mm; }
+    .qr-label { font-size: 8pt; color: #666; line-height: 1.2; font-weight: 500; }
+
+    .credentials-column { flex: 1; display: flex; flex-direction: column; justify-content: center; }
+    .cred-card { border: 2px solid #333; border-radius: 12px; padding: 4mm; background: #fff; box-shadow: 4px 4px 0px rgba(0,0,0,0.1); display: flex; flex-direction: column; gap: 3mm; height: auto; }
+    .cred-header { text-align: center; font-size: 9pt; font-weight: bold; color: #888; letter-spacing: 2px; margin-bottom: 1mm; }
+    .cred-group { margin-bottom: 1mm; }
+    .cred-label { font-size: 8pt; font-weight: bold; color: #555; text-transform: uppercase; margin-bottom: 1mm; }
+    .cred-value { font-family: 'Courier New', monospace; font-size: 15pt; font-weight: 900; color: #000; background: #f8fafc; border: 1px solid #ccc; border-radius: 6px; padding: 2mm; text-align: center; word-break: break-all; }
+    .password { letter-spacing: 1px; }
+    .pass-dots { color: #ccc; font-weight: normal; letter-spacing: -1px; }
+    .student-details { margin-top: 2mm; text-align: center; border-top: 1px dashed #ccc; padding-top: 2mm; }
+    .student-name { font-weight: bold; font-size: 10pt; margin-bottom: 1mm; }
+    .student-group { font-size: 9pt; color: #555; }
+
+    .ticket-footer { text-align: center; font-size: 8pt; color: #888; padding: 2mm; border-top: 1px solid #eee; background: #fafafa; flex-shrink: 0; }
+}

@@ -45,10 +45,11 @@ export function showAlert(type, title, text) {
     Swal.fire({ icon: type, title, text });
 }
 
-export async function showConfirm(title, text, confirmButtonText = 'Да, удалить!') {
+// === ВОТ ЗДЕСЬ БЫЛО ИСПРАВЛЕНИЕ ===
+export async function showConfirm(title, htmlContent, confirmButtonText = 'Да, удалить!') {
     const result = await Swal.fire({
         title,
-        text,
+        html: htmlContent, // Заменили text на html
         icon: 'warning',
         showCancelButton: true,
         confirmButtonColor: '#3085d6',
@@ -65,9 +66,9 @@ export function toggleSuperAdminFeatures(userRole) {
     superAdminElements.forEach(el => el.classList.toggle('hidden', !isSuperAdmin));
 }
 
-export function showLoading() {
+export function showLoading(title = 'Подождите...') {
     Swal.fire({
-        title: 'Подождите...',
+        title: title,
         didOpen: () => {
             Swal.showLoading();
         },

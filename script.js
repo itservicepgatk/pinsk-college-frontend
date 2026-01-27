@@ -29,6 +29,59 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs
 let pdfDoc = null;
 let pageNum = 1;
 
+// === ФУНКЦИЯ ДЛЯ ПРЕВРАЩЕНИЯ LATIN -> КИРИЛЛИЦА ===
+function detransliterate(text) {
+    if (!text) return text;
+
+    const lastDotIndex = text.lastIndexOf('.');
+    let name = text;
+    let ext = '';
+    if (lastDotIndex !== -1) {
+        name = text.substring(0, lastDotIndex);
+        ext = text.substring(lastDotIndex);
+    }
+
+    name = name.replace(/_/g, ' ');
+
+    const map = {
+        'SCH': 'Щ', 'Sch': 'Щ', 'sch': 'щ',
+        'ZH': 'Ж', 'Zh': 'Ж', 'zh': 'ж',
+        'CH': 'Ч', 'Ch': 'Ч', 'ch': 'ч',
+        'SH': 'Ш', 'Sh': 'Ш', 'sh': 'ш',
+        'YU': 'Ю', 'Yu': 'Ю', 'yu': 'ю',
+        'YA': 'Я', 'Ya': 'Я', 'ya': 'я',
+        'A': 'А', 'a': 'а',
+        'B': 'Б', 'b': 'б',
+        'V': 'В', 'v': 'в',
+        'G': 'Г', 'g': 'г',
+        'D': 'Д', 'd': 'д',
+        'E': 'Е', 'e': 'е',
+        'Z': 'З', 'z': 'з',
+        'I': 'И', 'i': 'и',
+        'J': 'Й', 'j': 'й',
+        'K': 'К', 'k': 'к',
+        'L': 'Л', 'l': 'л',
+        'M': 'М', 'm': 'м',
+        'N': 'Н', 'n': 'н',
+        'O': 'О', 'o': 'о',
+        'P': 'П', 'p': 'п',
+        'R': 'Р', 'r': 'р',
+        'S': 'С', 's': 'с',
+        'T': 'Т', 't': 'т',
+        'U': 'У', 'u': 'у',
+        'F': 'Ф', 'f': 'ф',
+        'H': 'Х', 'h': 'х',
+        'C': 'Ц', 'c': 'ц',
+        'Y': 'Ы', 'y': 'ы'
+    };
+
+    for (const [eng, rus] of Object.entries(map)) {
+        name = name.split(eng).join(rus);
+    }
+
+    return name + ext;
+}
+
 tabsContainer.addEventListener('click', (e) => {
     e.preventDefault();
     const targetTab = e.target.closest('.tab');
@@ -165,6 +218,22 @@ function handleMaintenanceBanner(enabled) {
     }
 }
 
+function getIconForFile(fileName) {
+    const extension = fileName.split('.').pop().toLowerCase();
+    switch (extension) {
+        case 'pdf': return '📄';
+        case 'doc': case 'docx': return '📝';
+        case 'txt': case 'md': return '🗒️';
+        case 'xls': case 'xlsx': case 'csv': return '📈';
+        case 'ppt': case 'pptx': return '📊';
+        case 'png': case 'jpg': case 'jpeg': case 'gif': case 'webp': case 'svg': return '🖼️';
+        case 'zip': case 'rar': case '7z': return '📦';
+        case 'mp3': case 'wav': return '🎵';
+        case 'mp4': case 'mov': case 'avi': return '🎥';
+        default: return '📄';
+    }
+}
+
 function displayLearnerInfo(data) {
     loginViewContainer.classList.add('hidden');
     learnerInfoContainer.classList.remove('hidden');
@@ -189,12 +258,14 @@ function displayLearnerInfo(data) {
     if (data.materials && data.materials.length > 0) {
         data.materials.forEach(material => {
             const link = document.createElement('a');
-            link.textContent = material.name;
+            const displayName = detransliterate(material.name);
+            
+            link.innerHTML = `${getIconForFile(material.name)} ${displayName}`;
             link.href = '#';
             link.dataset.path = material.path;
             link.addEventListener('click', (e) => {
                 e.preventDefault();
-                openPdfViewer(material.path, material.name);
+                openFileViewer(material.path, displayName);
             });
             materialsList.appendChild(link);
         });
@@ -309,13 +380,54 @@ pdfCloseBtn.addEventListener('click', () => {
     pdfModal.classList.add('hidden');
 });
 
-async function openPdfViewer(path, name) {
+// === УНИВЕРСАЛЬНАЯ ФУНКЦИЯ ПРОСМОТРА (БЕЗ СКАЧИВАНИЯ) ===
+async function openFileViewer(path, name) {
     const token = localStorage.getItem('learnerToken');
     if (!token) {
         Swal.fire('Ошибка', 'Ваша сессия истекла. Пожалуйста, войдите заново.', 'error');
         return;
     }
 
+    const extension = path.split('.').pop().toLowerCase();
+
+    // 1. ОФИСНЫЕ ДОКУМЕНТЫ (Word, Excel, PowerPoint)
+    if (['doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx'].includes(extension)) {
+        try {
+            Swal.fire({ title: 'Загрузка документа...', didOpen: () => Swal.showLoading() });
+
+            const response = await fetch(`${API_URL}/api/learners/get-material-url?path=${encodeURIComponent(path)}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+
+            if (!response.ok) throw new Error('Не удалось получить ссылку');
+            const { signedUrl } = await response.json();
+
+            Swal.close();
+
+            const googleViewerUrl = `https://docs.google.com/gview?url=${encodeURIComponent(signedUrl)}&embedded=true`;
+
+            // Добавляем оверлей, чтобы перекрыть кнопку "Открыть в новой вкладке"
+            const htmlContent = `
+                <div style="position: relative; width: 100%; height: 80vh;">
+                    <iframe src="${googleViewerUrl}" style="width:100%; height:100%; border:none;"></iframe>
+                    <div style="position: absolute; top: 0; right: 0; width: 60px; height: 60px; background: transparent; z-index: 10;"></div>
+                </div>
+            `;
+
+            Swal.fire({
+                title: name,
+                html: htmlContent,
+                width: '90vw',
+                showCloseButton: true,
+                showConfirmButton: false,
+            });
+        } catch (e) {
+            Swal.fire('Ошибка', 'Не удалось открыть документ', 'error');
+        }
+        return;
+    }
+
+    // 2. PDF и КАРТИНКИ
     try {
         Swal.fire({ title: 'Загрузка файла...', didOpen: () => Swal.showLoading(), allowOutsideClick: false });
 
@@ -328,10 +440,9 @@ async function openPdfViewer(path, name) {
             throw new Error(errorData.message);
         }
 
-        const fileExtension = name.split('.').pop().toLowerCase();
         Swal.close();
 
-        if (fileExtension === 'pdf') {
+        if (extension === 'pdf') {
             const pdfData = await response.arrayBuffer();
             pdfTitle.textContent = name;
             pdfModal.classList.remove('hidden');
@@ -342,7 +453,7 @@ async function openPdfViewer(path, name) {
             pageCountSpan.textContent = pdfDoc.numPages;
             pageNum = 1;
             renderPage(pageNum);
-        } else if (['png', 'jpg', 'jpeg', 'gif', 'webp'].includes(fileExtension)) {
+        } else if (['png', 'jpg', 'jpeg', 'gif', 'webp'].includes(extension)) {
             const imageBlob = await response.blob();
             const imageUrl = URL.createObjectURL(imageBlob);
             Swal.fire({
@@ -350,21 +461,18 @@ async function openPdfViewer(path, name) {
                 imageUrl: imageUrl,
                 imageAlt: name,
                 width: '80vw',
+                showConfirmButton: false, 
+                showCloseButton: true,
                 willClose: () => {
                     URL.revokeObjectURL(imageUrl);
                 }
             });
         } else {
-            const blob = await response.blob();
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.style.display = 'none';
-            a.href = url;
-            a.download = name;
-            document.body.appendChild(a);
-            a.click();
-            window.URL.revokeObjectURL(url);
-            a.remove();
+            Swal.fire({
+                icon: 'info',
+                title: 'Просмотр недоступен',
+                text: 'Этот тип файла нельзя просмотреть в браузере, а скачивание отключено.'
+            });
         }
     } catch (error) {
         Swal.close();
@@ -393,6 +501,45 @@ window.addEventListener('keydown', function(event) {
 
 document.addEventListener('DOMContentLoaded', async () => {
     loadSavedLogins();
+
+    // === ЛОГИКА QR ВХОДА ===
+    const urlParams = new URLSearchParams(window.location.search);
+    const qrKey = urlParams.get('qr_login');
+
+    if (qrKey) {
+        window.history.replaceState({}, document.title, window.location.pathname);
+        
+        try {
+            learnerLoader.classList.remove('hidden');
+            loginViewContainer.classList.add('hidden');
+            
+            const response = await fetch(`${API_URL}/qr-login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ key: qrKey })
+            });
+
+            if (!response.ok) throw new Error('Неверный QR-код');
+
+            const data = await response.json();
+            localStorage.setItem('learnerToken', data.token);
+            handleMaintenanceBanner(data.maintenanceMode);
+            displayLearnerInfo(data.learnerData);
+            
+            return; 
+
+        } catch (error) {
+            console.error(error);
+            loginViewContainer.classList.remove('hidden');
+            learnerLoader.classList.add('hidden');
+            Swal.fire({
+                icon: 'error',
+                title: 'Ошибка входа',
+                text: 'QR-код устарел или недействителен. Пожалуйста, войдите с помощью логина и пароля.'
+            });
+        }
+    }
+    // =======================
 
     try {
         const res = await fetch(`${API_URL}/api/settings/maintenance`);

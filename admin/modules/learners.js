@@ -4,11 +4,53 @@ import * as ui from '../ui.js';
 import { state, updateState } from '../state.js';
 import { initializeDashboard } from './dashboard.js';
 import { openLearnerProfile } from './learnerProfile.js';
+import { initializeGroups } from './groups.js';
 
 let searchTimer;
 
 function generateRandomPassword() {
     return Math.random().toString(36).slice(-8);
+}
+
+// === СЛОВАРЬ ДЛЯ ПЕРЕВОДА ЗАГОЛОВКОВ EXCEL ===
+const COLUMN_MAP = {
+    'ФИО': 'fullName',
+    'Логин': 'login',
+    'Пароль': 'password',
+    'Группа': 'group_name',
+    'Курс': 'course',
+    'Специальность': 'specialty',
+    'Дата зачисления': 'enrollmentDate',
+    'Расписание': 'sessionSchedule',
+    'Задолженности': 'academicDebts'
+};
+
+// === ФУНКЦИЯ СКАЧИВАНИЯ ШАБЛОНА ===
+function downloadExcelTemplate() {
+    const templateData = [
+        {
+            'ФИО': 'Иванов Иван Иванович',
+            'Логин': 'ivanov_ii',
+            'Пароль': 'pass12345',
+            'Группа': '117',
+            'Курс': '1',
+            'Специальность': 'Программное обеспечение',
+            'Дата зачисления': '2024-09-01',
+            'Расписание': '',
+            'Задолженности': ''
+        }
+    ];
+
+    const worksheet = XLSX.utils.json_to_sheet(templateData);
+    const wscols = [
+        {wch: 30}, {wch: 15}, {wch: 15}, {wch: 10},
+        {wch: 5}, {wch: 25}, {wch: 15}, {wch: 20}, {wch: 20}
+    ];
+    worksheet['!cols'] = wscols;
+
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Шаблон импорта");
+    XLSX.writeFile(workbook, "Шаблон_для_импорта_студентов.xlsx");
 }
 
 export function openLearnerModal(mode, learnerId = null) {
@@ -70,8 +112,11 @@ async function handleLearnerFormSubmit(e) {
 
         closeLearnerModal();
         ui.showAlert('success', 'Сохранено!', 'Данные учащегося успешно обновлены.');
+        
         initializeDashboard();
+        initializeGroups();
         fetchLearners();
+        
     } catch (error) {
         ui.showAlert('error', 'Ошибка!', error.message);
     }
@@ -82,35 +127,54 @@ async function handleFileImport(event) {
     if (!file) return;
 
     const reader = new FileReader();
+    
     reader.onload = async (e) => {
-        const text = e.target.result;
-        const lines = text.split(/\r?\n/).filter(line => line.trim() !== '');
-        if (lines.length < 2) {
-            return ui.showAlert('error', 'Ошибка', 'Файл пуст или имеет неверный формат.');
-        }
+        try {
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, { type: 'array' });
+            const firstSheetName = workbook.SheetNames[0];
+            const worksheet = workbook.Sheets[firstSheetName];
+            const jsonData = XLSX.utils.sheet_to_json(worksheet);
 
-        const headers = lines[0].split(',').map(h => h.trim());
-        const learners = lines.slice(1).map(line => {
-            const values = line.split(',');
-            const learner = {};
-            headers.forEach((header, index) => {
-                learner[header] = values[index] ? values[index].trim() : '';
+            if (jsonData.length === 0) throw new Error('Файл пуст.');
+
+            const learners = jsonData.map(row => {
+                const learner = {};
+                for (const [rusKey, engKey] of Object.entries(COLUMN_MAP)) {
+                    const value = row[rusKey] || row[Object.keys(row).find(k => k.trim().toLowerCase() === rusKey.toLowerCase())];
+                    if (value !== undefined) {
+                        learner[engKey] = String(value).trim();
+                    }
+                }
+                if (!learner.fullName && row.fullName) learner.fullName = row.fullName;
+                if (!learner.login && row.login) learner.login = row.login;
+                if (!learner.password && row.password) learner.password = row.password;
+                if (!learner.group_name && row.group_name) learner.group_name = row.group_name;
+                return learner;
             });
-            return learner;
-        });
 
-        if (await ui.showConfirm(`Подтверждение импорта`, `Найдено <b>${learners.length}</b> учащихся. Продолжить?`, 'Да, импортировать')) {
-            try {
-                const data = await api.importLearners(learners);
-                ui.showAlert('success', 'Успех!', data.message);
-                fetchLearners();
-                initializeDashboard();
-            } catch (error) {
-                ui.showAlert('error', 'Ошибка импорта!', error.message);
+            const validLearners = learners.filter(l => l.fullName && l.login && l.group_name);
+
+            if (validLearners.length === 0) {
+                throw new Error('Не найдено корректных данных.');
             }
+
+            if (await ui.showConfirm(`Подтверждение импорта`, `Найдено <b>${validLearners.length}</b> учащихся. Продолжить?`, 'Да, импортировать')) {
+                ui.showLoading('Импорт данных...');
+                const data = await api.importLearners(validLearners);
+                ui.closeLoading();
+                ui.showAlert('success', 'Успех!', data.message);
+                
+                initializeDashboard();
+                initializeGroups();
+                fetchLearners();
+            }
+        } catch (error) {
+            ui.closeLoading();
+            ui.showAlert('error', 'Ошибка импорта!', error.message);
         }
     };
-    reader.readAsText(file);
+    reader.readAsArrayBuffer(file);
     DOMElements.csvFileInput.value = '';
 }
 
@@ -120,22 +184,10 @@ async function exportLearnersToCSV() {
         if (learners.length === 0) {
             return ui.showAlert('info', 'Информация', 'Нет данных для экспорта.');
         }
-
-        const headers = Object.keys(learners[0]);
-        const csvRows = [headers.join(',')];
-        learners.forEach(learner => {
-            const values = headers.map(header => `"${(learner[header] || '').toString().replace(/"/g, '""')}"`);
-            csvRows.push(values.join(','));
-        });
-
-        const blob = new Blob([`\uFEFF${csvRows.join('\n')}`], {
-            type: 'text/csv;charset=utf-8;'
-        });
-        const link = document.createElement('a');
-        link.href = URL.createObjectURL(blob);
-        link.download = 'learners_export.csv';
-        link.click();
-        URL.revokeObjectURL(link.href);
+        const worksheet = XLSX.utils.json_to_sheet(learners);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Учащиеся");
+        XLSX.writeFile(workbook, "Экспорт_учащихся.xlsx");
     } catch (error) {
         ui.showAlert('error', 'Ошибка экспорта!', error.message);
     }
@@ -143,15 +195,30 @@ async function exportLearnersToCSV() {
 
 function handleLearnerAction(e) {
     const target = e.target;
+    
+    // Если клик по чекбоксу - ничего не делаем, он сам переключится
+    if (target.classList.contains('learner-checkbox')) {
+        updateDeleteSelectedButtonState();
+        return;
+    }
+
+    // Если клик по кнопке или ссылке - обрабатываем
     const learnerId = target.closest('tr')?.dataset.learnerId;
     if (!learnerId) return;
 
-    e.preventDefault();
-
     if (target.matches('.learner-name-link')) {
+        e.preventDefault();
         openLearnerProfile(learnerId);
     } else if (target.matches('.btn-delete')) {
+        e.preventDefault();
         deleteLearner(learnerId);
+    } else {
+        // Если клик просто по строке - переключаем чекбокс
+        const checkbox = target.closest('tr').querySelector('.learner-checkbox');
+        if (checkbox) {
+            checkbox.checked = !checkbox.checked;
+            updateDeleteSelectedButtonState();
+        }
     }
 }
 
@@ -181,6 +248,8 @@ function renderLearners(learnersToRender) {
     learnersArray.forEach(learner => {
         const row = document.createElement('tr');
         row.dataset.learnerId = learner.id;
+        // Добавляем cursor: pointer для строки, чтобы было понятно, что можно кликать
+        row.style.cursor = 'pointer';
         row.innerHTML = `
             <td><input type="checkbox" class="learner-checkbox" value="${learner.id}"></td>
             <td><a href="#" class="learner-name-link">${learner.full_name || 'Имя не указано'}</a></td>
@@ -214,9 +283,8 @@ export async function fetchLearners() {
         if (state.currentSearchName) params.append('searchName', state.currentSearchName);
 
         const data = await api.getLearners(params);
-        updateState({
-            learners: data.learners || []
-        });
+        updateState({ learners: data.learners || [] });
+        
         if (state.currentGroupName && data.learners && data.learners.length > 0) {
             const specialty = data.learners[0].specialty;
             if (specialty) {
@@ -227,9 +295,7 @@ export async function fetchLearners() {
         renderLearners(state.learners);
         const paginationContainer = document.querySelector('#pagination-container .pagination-wrapper');
         ui.renderPagination(data.totalPages, data.currentPage, paginationContainer, (page) => {
-            updateState({
-                currentPage: page
-            });
+            updateState({ currentPage: page });
             fetchLearners();
         });
         ui.updateSortIndicators(state.currentSort);
@@ -243,11 +309,12 @@ async function deleteLearner(id) {
         try {
             await api.deleteLearner(id);
             ui.showAlert('success', 'Удалено!', 'Данные учащегося были успешно удалены.');
+            
             initializeDashboard();
+            initializeGroups();
+            
             if (state.learners.length === 1 && state.currentPage > 1) {
-                updateState({
-                    currentPage: state.currentPage - 1
-                });
+                updateState({ currentPage: state.currentPage - 1 });
             }
             fetchLearners();
         } catch (error) {
@@ -259,8 +326,10 @@ async function deleteLearner(id) {
 function updateDeleteSelectedButtonState() {
     const selected = document.querySelectorAll('.learner-checkbox:checked');
     const count = selected.length;
-    DOMElements.deleteSelectedBtn.textContent = `Удалить выбранных (${count})`;
-    DOMElements.deleteSelectedBtn.classList.toggle('hidden', count === 0);
+    if (DOMElements.deleteSelectedBtn) {
+        DOMElements.deleteSelectedBtn.textContent = `Удалить выбранных (${count})`;
+        DOMElements.deleteSelectedBtn.classList.toggle('hidden', count === 0);
+    }
 }
 
 async function deleteSelectedLearners() {
@@ -270,8 +339,11 @@ async function deleteSelectedLearners() {
         try {
             const resData = await api.deleteMultipleLearners(ids);
             ui.showAlert('success', 'Удалено!', resData.message);
+            
             initializeDashboard();
+            initializeGroups();
             fetchLearners();
+            
         } catch (error) {
             ui.showAlert('error', 'Ошибка!', error.message);
         }
@@ -279,149 +351,158 @@ async function deleteSelectedLearners() {
 }
 
 export function initializeLearners() {
-    DOMElements.addLearnerBtn.addEventListener('click', () => openLearnerModal('add'));
-    DOMElements.cancelBtn.addEventListener('click', closeLearnerModal);
-    DOMElements.learnerForm.addEventListener('submit', handleLearnerFormSubmit);
-    DOMElements.importCsvBtn.addEventListener('click', () => DOMElements.csvFileInput.click());
-    DOMElements.csvFileInput.addEventListener('change', handleFileImport);
-    DOMElements.exportCsvBtn.addEventListener('click', exportLearnersToCSV);
+    if (DOMElements.addLearnerBtn) {
+        DOMElements.addLearnerBtn.addEventListener('click', () => openLearnerModal('add'));
+    }
+    
+    if (DOMElements.cancelBtn) {
+        DOMElements.cancelBtn.addEventListener('click', closeLearnerModal);
+    }
+    
+    if (DOMElements.learnerForm) {
+        DOMElements.learnerForm.addEventListener('submit', handleLearnerFormSubmit);
+    }
+    
+    if (DOMElements.importCsvBtn && DOMElements.csvFileInput) {
+        DOMElements.importCsvBtn.addEventListener('click', () => DOMElements.csvFileInput.click());
+        DOMElements.csvFileInput.addEventListener('change', handleFileImport);
+    }
+    
+    if (DOMElements.exportCsvBtn) {
+        DOMElements.exportCsvBtn.addEventListener('click', exportLearnersToCSV);
+    }
 
-    DOMElements.generatePasswordBtn.addEventListener('click', () => {
-        const newPassword = generateRandomPassword();
-        const passwordInput = DOMElements.learnerForm.elements['password'];
-        passwordInput.value = newPassword;
-        passwordInput.type = 'text';
-        DOMElements.learnerForm.querySelector('.password-toggle-icon').classList.add('is-visible');
-        setTimeout(() => {
-            passwordInput.type = 'password';
-            DOMElements.learnerForm.querySelector('.password-toggle-icon').classList.remove('is-visible');
-        }, 3000);
-    });
+    if (DOMElements.downloadTemplateBtn) {
+        DOMElements.downloadTemplateBtn.addEventListener('click', downloadExcelTemplate);
+    }
 
-    DOMElements.learnerForm.querySelector('.password-toggle-icon').addEventListener('click', (e) => {
-        const icon = e.target;
-        const passwordInput = DOMElements.learnerForm.elements['password'];
-        if (passwordInput.type === 'password') {
+    if (DOMElements.generatePasswordBtn) {
+        DOMElements.generatePasswordBtn.addEventListener('click', () => {
+            const newPassword = generateRandomPassword();
+            const passwordInput = DOMElements.learnerForm.elements['password'];
+            passwordInput.value = newPassword;
             passwordInput.type = 'text';
-            icon.classList.add('is-visible');
-        } else {
-            passwordInput.type = 'password';
-            icon.classList.remove('is-visible');
-        }
-    });
-
-    DOMElements.importInstructionsBtn.addEventListener('click', () => {
-        Swal.fire({
-            title: 'Инструкция по импорту',
-            icon: 'info',
-            html: `
-                <div style="text-align: left; padding: 10px;">
-                    <h4>Шаг 1: Подготовка файла</h4>
-                    <p>Для импорта требуется файл формата <strong>.csv</strong> с разделителем-запятой и в кодировке <strong>UTF-8</strong> (это важно для корректного отображения русских имен).</p>
-                    
-                    <h4>Шаг 2: Структура файла</h4>
-                    <p>Первая строка файла должна содержать заголовки столбцов. Обязательные поля отмечены звездочкой (*):</p>
-                    <ul>
-                        <li><strong>fullName*</strong> - ФИО учащегося</li>
-                        <li><strong>login*</strong> - Уникальный логин</li>
-                        <li><strong>password*</strong> - Пароль для входа</li>
-                        <li><strong>group_name*</strong> - Номер группы</li>
-                        <li><strong>course</strong> - Курс (необязательно)</li>
-                        <li><strong>specialty</strong> - Специальность (необязательно)</li>
-                    </ul>
-
-                    <h4>Шаг 3: Пример содержимого файла</h4>
-                    <pre style="background-color: #f5f5f5; border-radius: 4px; padding: 10px; font-size: 12px; text-align: left;"><code>fullName,login,password,group_name,course,specialty
-"Иванов Иван Иванович",ivanov,pass123,117,1,"Программное обеспечение"
-"Петрова Мария Сергеевна",petrova,qwerty,258,2,"Бухгалтерский учет"</code></pre>
-
-                    <h4>Рекомендуемые программы</h4>
-                     <ul>
-                        <li><strong>Google Sheets (Рекомендуется):</strong> Просто создайте таблицу и выберите "Файл" -> "Скачать" -> "Файл CSV". Кодировка будет правильной.</li>
-                        <li><strong>Microsoft Excel:</strong> При сохранении выберите "Файл" -> "Сохранить как" и в поле "Тип файла" укажите <strong>"CSV UTF-8 (разделители - запятые)"</strong>.</li>
-                    </ul>
-                </div>
-            `,
-            confirmButtonText: 'Понятно',
+            const icon = DOMElements.learnerForm.querySelector('.password-toggle-icon');
+            if (icon) {
+                icon.classList.add('is-visible');
+                setTimeout(() => {
+                    passwordInput.type = 'password';
+                    icon.classList.remove('is-visible');
+                }, 3000);
+            }
         });
-    });
+    }
 
-    DOMElements.allLearnersBtn.addEventListener('click', () => {
-        updateState({
-            currentSearchName: '',
-            currentSort: {
-                key: 'full_name',
-                direction: 'asc'
-            },
-            currentPage: 1,
-            currentGroupName: ''
+    const passIcon = DOMElements.learnerForm?.querySelector('.password-toggle-icon');
+    if (passIcon) {
+        passIcon.addEventListener('click', (e) => {
+            const icon = e.target;
+            const passwordInput = DOMElements.learnerForm.elements['password'];
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                icon.classList.add('is-visible');
+            } else {
+                passwordInput.type = 'password';
+                icon.classList.remove('is-visible');
+            }
         });
-        DOMElements.searchInput.value = '';
-        DOMElements.groupFilterSelect.value = ''; 
+    }
 
-        ui.showLearnersView('Все');
-        populateGroupFilter().then(() => {
-             DOMElements.groupFilterSelect.value = ''; 
+    if (DOMElements.importInstructionsBtn) {
+        DOMElements.importInstructionsBtn.addEventListener('click', () => {
+            Swal.fire({
+                title: 'Как загрузить студентов',
+                icon: 'info',
+                html: `
+                    <div style="text-align: left; padding: 10px;">
+                        <p>1. Нажмите кнопку <b><i class="fa-solid fa-file-excel"></i> Шаблон</b>.</p>
+                        <p>2. Заполните таблицу в Excel.</p>
+                        <p>3. Нажмите <b>Импорт</b> и выберите файл.</p>
+                    </div>
+                `,
+                confirmButtonText: 'Понятно',
+            });
         });
-        fetchLearners();
-    });
+    }
 
-    DOMElements.backToGroupsBtn.addEventListener('click', () => {
-        updateState({
-            currentGroupName: null
-        });
-        ui.showGroupsView();
-    });
-
-    DOMElements.tableHead.addEventListener('click', (e) => {
-        const th = e.target.closest('th');
-        if (!th || !th.dataset.sortBy) return;
-        const sortKey = th.dataset.sortBy;
-        let direction = 'asc';
-        if (state.currentSort.key === sortKey) {
-            direction = state.currentSort.direction === 'asc' ? 'desc' : 'asc';
-        }
-        updateState({
-            currentSort: {
-                key: sortKey,
-                direction
-            },
-            currentPage: 1
-        });
-        fetchLearners();
-    });
-
-    DOMElements.searchInput.addEventListener('input', () => {
-        clearTimeout(searchTimer);
-        searchTimer = setTimeout(() => {
+    if (DOMElements.allLearnersBtn) {
+        DOMElements.allLearnersBtn.addEventListener('click', () => {
             updateState({
-                currentSearchName: DOMElements.searchInput.value,
+                currentSearchName: '',
+                currentSort: { key: 'full_name', direction: 'asc' },
+                currentPage: 1,
+                currentGroupName: ''
+            });
+            DOMElements.searchInput.value = '';
+            DOMElements.groupFilterSelect.value = ''; 
+            ui.showLearnersView('Все');
+            populateGroupFilter().then(() => {
+                 DOMElements.groupFilterSelect.value = ''; 
+            });
+            fetchLearners();
+        });
+    }
+
+    if (DOMElements.backToGroupsBtn) {
+        DOMElements.backToGroupsBtn.addEventListener('click', () => {
+            updateState({ currentGroupName: null });
+            ui.showGroupsView();
+        });
+    }
+
+    if (DOMElements.tableHead) {
+        DOMElements.tableHead.addEventListener('click', (e) => {
+            const th = e.target.closest('th');
+            if (!th || !th.dataset.sortBy) return;
+            const sortKey = th.dataset.sortBy;
+            let direction = 'asc';
+            if (state.currentSort.key === sortKey) {
+                direction = state.currentSort.direction === 'asc' ? 'desc' : 'asc';
+            }
+            updateState({
+                currentSort: { key: sortKey, direction },
                 currentPage: 1
             });
             fetchLearners();
-        }, 300);
-    });
-
-    DOMElements.groupFilterSelect.addEventListener('change', () => {
-        updateState({
-            currentPage: 1,
-            currentGroupName: DOMElements.groupFilterSelect.value
         });
-        fetchLearners();
-    });
+    }
 
-    DOMElements.selectAllCheckbox.addEventListener('change', (e) => {
-        document.querySelectorAll('.learner-checkbox').forEach(cb => cb.checked = e.target.checked);
-        updateDeleteSelectedButtonState();
-    });
+    if (DOMElements.searchInput) {
+        DOMElements.searchInput.addEventListener('input', () => {
+            clearTimeout(searchTimer);
+            searchTimer = setTimeout(() => {
+                updateState({
+                    currentSearchName: DOMElements.searchInput.value,
+                    currentPage: 1
+                });
+                fetchLearners();
+            }, 300);
+        });
+    }
 
-    DOMElements.learnersTableBody.addEventListener('change', (e) => {
-        if (e.target.classList.contains('learner-checkbox')) {
+    if (DOMElements.groupFilterSelect) {
+        DOMElements.groupFilterSelect.addEventListener('change', () => {
+            updateState({
+                currentPage: 1,
+                currentGroupName: DOMElements.groupFilterSelect.value
+            });
+            fetchLearners();
+        });
+    }
+
+    if (DOMElements.selectAllCheckbox) {
+        DOMElements.selectAllCheckbox.addEventListener('change', (e) => {
+            document.querySelectorAll('.learner-checkbox').forEach(cb => cb.checked = e.target.checked);
             updateDeleteSelectedButtonState();
-            if (!e.target.checked) DOMElements.selectAllCheckbox.checked = false;
-        }
-    });
+        });
+    }
 
-    DOMElements.deleteSelectedBtn.addEventListener('click', deleteSelectedLearners);
-    DOMElements.learnersTableBody.addEventListener('click', handleLearnerAction);
+    if (DOMElements.learnersTableBody) {
+        // Убрали 'change', так как теперь 'click' обрабатывает всё
+        DOMElements.learnersTableBody.addEventListener('click', handleLearnerAction);
+    }
+
+    if (DOMElements.deleteSelectedBtn) {
+        DOMElements.deleteSelectedBtn.addEventListener('click', deleteSelectedLearners);
+    }
 }

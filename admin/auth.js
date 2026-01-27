@@ -2,10 +2,9 @@ import { DOMElements } from './dom.js';
 import * as api from './api.js';
 import * as ui from './ui.js';
 import { updateState } from './state.js';
-import { INACTIVITY_TIMEOUT } from './config.js';
 import { initializeApp } from './app.js';
 
-let inactivityTimer;
+let inactivityTimer = null;
 
 function handleMaintenanceBanner(enabled) {
     const banner = document.getElementById('maintenance-banner');
@@ -15,20 +14,8 @@ function handleMaintenanceBanner(enabled) {
     }
 }
 
-function handleInactivity() {
-    if (localStorage.getItem('adminToken')) {
-        Swal.fire({
-            title: 'Сессия завершена',
-            text: 'Вы были неактивны в течение 5 минут. Пожалуйста, войдите снова.',
-            icon: 'warning',
-            confirmButtonText: 'OK'
-        }).then(() => logout('Сессия истекла по неактивности'));
-    }
-}
-
 export function resetInactivityTimer() {
-    clearTimeout(inactivityTimer);
-    inactivityTimer = setTimeout(handleInactivity, INACTIVITY_TIMEOUT);
+    if (inactivityTimer) clearTimeout(inactivityTimer);
 }
 
 async function handleLogin(event) {
@@ -48,7 +35,7 @@ async function handleLogin(event) {
         updateState({ token: data.token, userRole: data.role });
         localStorage.setItem('adminToken', data.token);
         localStorage.setItem('adminRole', data.role);
-        resetInactivityTimer();
+        
         handleMaintenanceBanner(data.maintenanceMode);
         initializeApp();
     } catch (error) {
@@ -59,8 +46,6 @@ async function handleLogin(event) {
 }
 
 async function logout(reason = 'Ручной выход') {
-    clearTimeout(inactivityTimer);
-    
     try {
         if (localStorage.getItem('adminToken')) {
             await api.logLogout({ reason });
@@ -81,8 +66,4 @@ export function initializeAuth() {
         DOMElements.adminLoginForm.addEventListener('submit', handleLogin);
     }
     DOMElements.logoutButton.addEventListener('click', () => logout('Ручной выход'));
-    window.addEventListener('mousemove', resetInactivityTimer);
-    window.addEventListener('mousedown', resetInactivityTimer);
-    window.addEventListener('keypress', resetInactivityTimer);
-    window.addEventListener('touchmove', resetInactivityTimer);
 }
