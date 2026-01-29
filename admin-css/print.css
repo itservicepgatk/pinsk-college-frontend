@@ -93,4 +93,42 @@
     .student-group { font-size: 9pt; color: #555; }
 
     .ticket-footer { text-align: center; font-size: 8pt; color: #888; padding: 2mm; border-top: 1px solid #eee; background: #fafafa; flex-shrink: 0; }
+
+    /* --- QR CARD STYLES (Новый блок) --- */
+    .qr-card-container {
+        margin-top: auto;
+        width: 100%;
+        border-radius: 12px;
+        overflow: hidden;
+        border: 1px solid #2d5e66; /* Цвет рамки */
+        display: flex;
+        flex-direction: column;
+    }
+
+    .qr-card-body {
+        background: #fff;
+        padding: 3mm;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .generated-qr-img {
+        width: 35mm; /* Размер QR кода */
+        height: 35mm;
+        display: block;
+    }
+
+    .qr-card-footer {
+        background-color: #3b7e8a; /* Красивый бирюзовый цвет */
+        color: white;
+        text-align: center;
+        font-weight: bold;
+        font-size: 12pt;
+        padding: 2mm 0;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
 }
